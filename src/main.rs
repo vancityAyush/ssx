@@ -33,6 +33,8 @@ fn main() {
         Some(Commands::Copy(args)) => commands::copy::run(args, platform),
         Some(Commands::Config(args)) => commands::config::run(args),
         Some(Commands::Agent(args)) => commands::agent::run(args, platform),
+        Some(Commands::Init(args)) => commands::init::run(args),
+        Some(Commands::Completions(args)) => commands::completions::run(args),
     };
 
     if let Err(e) = result {

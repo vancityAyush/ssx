@@ -103,16 +103,35 @@ fn ensure_agent_running(platform: Platform) -> Result<(), String> {
 
             if output.status.success() {
                 let stdout = String::from_utf8_lossy(&output.stdout);
+                let mut env_cmds = Vec::new();
+
                 // Parse SSH_AUTH_SOCK from output
                 for line in stdout.lines() {
                     if let Some(sock) = line.strip_prefix("SSH_AUTH_SOCK=") {
                         if let Some(sock) = sock.strip_suffix("; export SSH_AUTH_SOCK;") {
                             std::env::set_var("SSH_AUTH_SOCK", sock);
+                            env_cmds.push(format!("export SSH_AUTH_SOCK={}", sock));
                         }
                     }
                     if let Some(pid) = line.strip_prefix("SSH_AGENT_PID=") {
                         if let Some(pid) = pid.strip_suffix("; export SSH_AGENT_PID;") {
                             std::env::set_var("SSH_AGENT_PID", pid);
+                            env_cmds.push(format!("export SSH_AGENT_PID={}", pid));
+                        }
+                    }
+                }
+
+                if let Ok(env_file) = std::env::var("SSHX_ENV_FILE") {
+                    if !env_cmds.is_empty() {
+                        use std::io::Write;
+                        if let Ok(mut file) = std::fs::OpenOptions::new()
+                            .append(true)
+                            .create(true)
+                            .open(env_file)
+                        {
+                            for cmd in env_cmds {
+                                let _ = writeln!(file, "{}", cmd);
+                            }
                         }
                     }
                 }

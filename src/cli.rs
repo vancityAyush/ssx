@@ -37,6 +37,12 @@ pub enum Commands {
 
     /// Manage SSH agent (list, add, remove keys)
     Agent(AgentArgs),
+
+    /// Generate shell evaluate script for environment integration
+    Init(InitArgs),
+
+    /// Generate shell auto-completions
+    Completions(CompletionsArgs),
 }
 
 #[derive(Parser, Default)]
@@ -111,4 +117,16 @@ pub struct AgentArgs {
 
     /// Key name (for add/remove)
     pub key: Option<String>,
+}
+
+#[derive(Parser)]
+pub struct InitArgs {
+    /// Shell to generate script for (bash, zsh, fish, powershell, elvish)
+    pub shell: clap_complete::Shell,
+}
+
+#[derive(Parser)]
+pub struct CompletionsArgs {
+    /// Shell to generate completions for (bash, zsh, fish, powershell, elvish)
+    pub shell: clap_complete::Shell,
 }
