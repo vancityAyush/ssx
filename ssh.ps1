@@ -183,10 +183,10 @@ try {
     $script:keyPath = Join-Path $sshDir $keyName
     if ($option -eq 3) {
         # Azure DevOps requires RSA keys (minimum 2048-bit)
-        & ssh-keygen -t rsa -b 4096 -C $email -f $script:keyPath -N '""'
+        & ssh-keygen -t rsa -b 4096 -C $email -f $script:keyPath -N ""
     } else {
         # GitHub, Bitbucket, GitLab support ed25519
-        & ssh-keygen -t ed25519 -C $email -f $script:keyPath -N '""'
+        & ssh-keygen -t ed25519 -C $email -f $script:keyPath -N ""
     }
 
     if (-not (Test-Path $script:keyPath) -or -not (Test-Path "$($script:keyPath).pub")) {
@@ -373,11 +373,16 @@ Host $hostName
             $sshOutput = & ssh -T -i $script:keyPath -o StrictHostKeyChecking=accept-new -o BatchMode=yes "git@$hostName" 2>&1
             $exitCode = $LASTEXITCODE
             $outputStr = $sshOutput -join "`n"
-            Write-Host $outputStr
 
             if ($exitCode -eq 0 -or $exitCode -eq 1 -or $outputStr -match "successfully authenticated|Shell access is not supported") {
-                Write-Host "SSH key is working!" -ForegroundColor Green
+                # Filter out confusing Azure DevOps messages
+                $filteredOutput = ($sshOutput | Where-Object { $_ -notmatch "shell request failed|Shell access is not supported" }) -join "`n"
+                if ($filteredOutput.Trim()) {
+                    Write-Host $filteredOutput
+                }
+                Write-Host "SSH connection successful! Your SSH key is working." -ForegroundColor Green
             } else {
+                Write-Host $outputStr
                 Write-Host "SSH connection failed. Please check your SSH key setup." -ForegroundColor Red
             }
         } else {

@@ -454,11 +454,16 @@ while true; do
             echo "Testing SSH connection to git@$hostName..."
             exit_code=0
             ssh_output=$(ssh -T -i "$HOME/.ssh/$keyName" -o StrictHostKeyChecking=accept-new -o BatchMode=yes "git@$hostName" 2>&1) || exit_code=$?
-            echo "$ssh_output"
 
             if [ "$exit_code" -eq 0 ] || [ "$exit_code" -eq 1 ] || echo "$ssh_output" | grep -qi "successfully authenticated\|Shell access is not supported"; then
-                echo "SSH key is working!"
+                # Filter out confusing Azure DevOps messages
+                filtered_output=$(echo "$ssh_output" | grep -vi "shell request failed\|Shell access is not supported")
+                if [ -n "$filtered_output" ]; then
+                    echo "$filtered_output"
+                fi
+                echo "SSH connection successful! Your SSH key is working."
             else
+                echo "$ssh_output"
                 echo "SSH connection failed. Please check your SSH key setup."
             fi
             ;;
