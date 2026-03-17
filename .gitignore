@@ -1,4 +1,5 @@
+dist/
+node_modules/
 target/
-npm/dist/
-npm/node_modules/
-npm/bun.lockb
+npm/
+bun.lockb
