@@ -1,0 +1,172 @@
+Use industry standard method to update this project as the cli tool of what it tries to achieve and maybe simplify the flow. If needed build
+    the project from scratch. use context7
+
+---
+
+use askUserQuestion Tool
+
+---
+
+<task-notification>
+<task-id>a921401ed17fcff15</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-vancityayush-Development-ssh-script/8f3b0538-92fc-402e-88d6-c43527a8bb3b/tasks/a921401ed17fcff15.output</output-file>
+<status>completed</status>
+<summary>Agent "Research industry-standard SSH CLI tools" completed</summary>
+<result>Here is a comprehensive summary of findings across all four areas of research.
+
+---
+
+## 1. Popular Tools for SSH Key Management with Git Providers
+
+### GitHub CLI (`gh`)
+The most mature and feature-complete option. Key commands:
+- **`gh ssh-key add <key-file>`** -- uploads an existing public key to GitHub. Flags: `--title`, `--type` (authentication or signing).
+- **`gh ssh-key list`** -- lists SSH keys on the account.
+- **`gh ssh-key delete`** -- removes a key.
+- **`gh auth login --git-protocol ssh`** -- during interactive login, if SSH is chosen, `gh` will detect existing SSH keys and offer to upload them. If none are found, it prompts to **generate a new key** and upload it automatically. This can be skipped with `--skip-ssh-key`.
+- **`gh auth setup-git`** -- configures git to use `gh` as a credential helper for all authenticated hosts. Flags: `--hostname`, `--force`.
+- **`gh repo deploy-key add <key-file>`** -- adds a deploy key to a specific repo (with `--allow-write`, `--title`).
+
+Key insight: `gh auth login` is the closest existing tool to what `ssh.sh` does -- it combines key generation, upload, and git config in one interactive flow. However, it only targets GitHub.
+
+### GitLab CLI (`glab`)
+Full CRUD for SSH keys:
+- **`glab ssh-key add <key-file> -t "title"`** -- uploads a key. Also supports `--expires-at` for expiration dates (ISO 8601 format).
+- **`glab ssh-key list`** -- lists keys with pagination (`--page`, `--per-page`, `--show-id`).
+- **`glab ssh-key get <id>`** -- retrieves a specific key.
+- **`glab ssh-key delete <id>`** -- deletes a key.
+
+Notable: `glab` does NOT auto-generate keys or configure `~/.ssh/config`. It only handles the upload/management side.
+
+### Bitbucket CLI (`bb`)
+- **`bb user ssh-keys`** -- lists SSH keys.
+- **`bb user ssh-key-add --label "name" --key "..."`** -- adds a key.
+- Supports both HTTPS and SSH via `--protocol/-p` flag on `bb repo clone`.
+- Does NOT handle key generation or `~/.ssh/config` management.
+
+### Azure DevOps
+- **No CLI support for SSH key upload.** SSH key management is done exclusively through the web portal.
+- The `az devops` CLI does not have an `ssh-key` subcommand.
+- Azure DevOps only supports RSA keys (not ed25519), and keys expire after 1 year by default.
+- This is a significant gap that your `ssh.sh` script fills.
+
+---
+
+## 2. How `gh ssh-key add` and `gh auth setup-git` Work
+
+### `gh auth login --git-protocol ssh` (the full flow):
+1. User selects GitHub.com or enterprise hostname
+2. User selects SSH as the git protocol
+3. `gh` scans `~/.ssh/` for existing key files (id_rsa, id_ed25519, etc.)
+4. If no key found: prompts "Generate a new SSH key to add to your GitHub account?" with optional passphrase
+5. Generates key via `ssh-keygen -t ed25519`
+6. Uploads the public key to GitHub via API (`POST /user/keys`)
+7. Stores the auth token in the system credential store
+
+### `gh ssh-key add`:
+- Simply calls the GitHub API `POST /user/keys` with the key content and title
+- Does NOT generate keys, does NOT modify `~/.ssh/config`, does NOT start ssh-agent
+
+### `gh auth setup-git`:
+- Configures `git config --global credential.helper` to use `gh` as the helper
+- This is HTTPS-focused; it does not touch SSH config at all
+
+### What `gh` does NOT do (that `ssh.sh` does):
+- Write Host blocks to `~/.ssh/config`
+- Start/configure `ssh-agent`
+- Copy public key to clipboard
+- Open provider settings pages in browser
+- Run `ssh -T` connection tests
+- Support multiple providers in a single tool
+
+---
+
+## 3. Common CLI Design Patterns
+
+### Subcommand structure (Cobra-style)
+The industry standard pattern is `APPNAME VERB NOUN --FLAG`:
+```
+gh ssh-key add ~/.ssh/id.pub --title "laptop"
+glab ssh-key list --show-id
+bb user ssh-key-add --label "work"
+```
+
+### Key design principles from [clig.dev](https://clig.dev/):
+- **Never require a prompt.** Always provide a way of passing input with flags or arguments. If stdin is not an interactive terminal, skip prompting and require flags/args instead.
+- **Use standard flag names** (`-f/--force`, `--json`, `-h/--help`, `-n/--dry-run`, `-q/--quiet`, `-v/--verbose`).
+- **Dual mode:** Interactive TUI for human users, non-interactive flags for automation/scripting.
+- **Consistent output:** Use `--json` for machine-readable output, human-friendly text by default.
+- **Group subcommands** when you have more than ~8-10 of them.
+
+### TUI frameworks (Bubbletea / Elm Architecture):
+- Modern Go CLIs use [Bubbletea](https://github.com/charmbracelet/bubbletea) with the Model-View-Update (MVU) pattern: `Init()`, `Update(msg)`, `View() string`.
+- [Cobra](https://cobra.dev/) handles subcommand routing and flag parsing; Bubbletea handles interactive UI within a command.
+- The pattern is: Cobra defines commands and validates flags, then hands off to a Bubbletea program for interactive input when needed.
+- Charmbracelet's [Bubbles](https://github.com/charmbracelet/bubbles) library provides reusable TUI components (spinners, text inputs, lists, tables, progress bars).
+
+### Non-interactive mode pattern (how `gh` does it):
+```bash
+# Interactive (prompts for everything)
+gh auth login
+
+# Non-interactive (all flags specified, no prompts)
+gh auth login --hostname github.com --git-protocol ssh --skip-ssh-key --with-token < token.txt
+```
+
+---
+
+## 4. Tools That Combine SSH Key Generation + Provider Upload + Config Management
+
+**No single widely-adopted open-source tool does all of this across multiple providers.** Here is the landscape:
+
+| Capability | `gh` | `glab` | `bb` | `ssh.sh` (yours) |
+|---|---|---|---|---|
+| Key generation | Yes (during login) | No | No | Yes |
+| Key upload to provider | Yes | Yes | Yes | No (clipboard + browser) |
+| `~/.ssh/config` management | No | No | No | Yes |
+| ssh-agent setup | No | No | No | Yes |
+| Connection testing | No | No | No | Yes |
+| Multi-provider | No (GitHub only) | No (GitLab only) | No (BB only) | Yes (4 providers) |
+| Non-interactive mode | Yes (flags) | Yes (flags) | Yes (flags) | No (fully interactive) |
+| Clipboard copy of key | No | No | No | Yes |
+| Git global config setup | Via `setup-git` (HTTPS only) | No | No | Yes |
+
+Enterprise tools like Keyfactor, BastionXP, and HashiCorp Vault handle key lifecycle management but are server-side infrastructure tools, not developer-facing CLI tools for initial setup.
+
+The closest conceptual match is `gh auth login --git-protocol ssh`, which does generation + upload + auth in one flow, but only for GitHub and without `~/.ssh/config` or agent management.
+
+---
+
+## Key Takeaways for Your Project
+
+1. **Your `ssh.sh` fills a real gap** -- no existing tool combines key generation + config management + agent setup + connection testing across multiple providers.
+
+2. **The biggest missing feature vs. industry tools is non-interactive mode.** Every major CLI (`gh`, `glab`, `bb`) supports fully flag-driven operation. Adding flags like `--provider github --email user@example.com --key-name mykey --no-prompt` would bring `ssh.sh` in line with modern CLI patterns.
+
+3. **API-based key upload** is the other major differentiator. `gh`, `glab`, and `bb` all upload keys via API rather than clipboard+browser. This could be an enhancement, though it would require authentication tokens.
+
+4. **Azure DevOps has no CLI SSH key support at all**, making your tool particularly valuable for that provider.
+
+---
+
+Sources:
+- [gh ssh-key manual](https://cli.github.com/manual/gh_ssh-key)
+- [gh ssh-key add manual](https://cli.github.com/manual/gh_ssh-key_add)
+- [gh auth login manual](https://cli.github.com/manual/gh_auth_login)
+- [gh auth setup-git manual](https://cli.github.com/manual/gh_auth_setup-git)
+- [glab ssh-key documentation](https://docs.gitlab.com/cli/ssh-key/)
+- [glab ssh-key add manpage](https://manpages.debian.org/testing/glab/glab-ssh-key-add.1.en.html)
+- [glab ssh-key list](https://docs.gitlab.com/cli/ssh-key/list/)
+- [glab ssh-key delete](https://docs.gitlab.com/cli/ssh-key/delete/)
+- [Bitbucket CLI](https://bb-cli.github.io/)
+- [Azure DevOps SSH key authentication](https://learn.microsoft.com/en-us/azure/devops/repos/git/use-ssh-keys-to-authenticate?view=azure-devops)
+- [Command Line Interface Guidelines (clig.dev)](https://clig.dev/)
+- [Cobra CLI framework](https://cobra.dev/)
+- [Charmbracelet Bubbletea](https://github.com/charmbracelet/bubbletea)
+- [Charmbracelet Bubbles](https://github.com/charmbracelet/bubbles)
+- [GitHub CLI issue #4506 - non-interactive flags](https://github.com/cli/cli/issues/4506)
+- [CLI UX patterns](https://lucasfcosta.com/2022/06/01/ux-patterns-cli-tools.html)</result>
+<usage><total_tokens>22816</total_tokens><tool_uses>13</tool_uses><duration_ms>101044</duration_ms></usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-vancityayush-Development-ssh-script/8f3b0538-92fc-402e-88d6-c43527a8bb3b/tasks/a921401ed17fcff15.output
