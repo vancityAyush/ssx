@@ -5,7 +5,8 @@
   "branch": "main",
   "checkpoints_count": 1,
   "files_touched": [
-    ".github/workflows/sshx-release.yml"
+    ".github/workflows/sshx-release.yml",
+    "README.md"
   ],
   "sessions": [
     {
@@ -13,13 +14,19 @@
       "transcript": "/50/194ffd4d01/0/full.jsonl",
       "content_hash": "/50/194ffd4d01/0/content_hash.txt",
       "prompt": "/50/194ffd4d01/0/prompt.txt"
+    },
+    {
+      "metadata": "/50/194ffd4d01/1/metadata.json",
+      "transcript": "/50/194ffd4d01/1/full.jsonl",
+      "content_hash": "/50/194ffd4d01/1/content_hash.txt",
+      "prompt": "/50/194ffd4d01/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 60,
-    "cache_creation_tokens": 169812,
-    "cache_read_tokens": 2382194,
-    "output_tokens": 24691,
-    "api_call_count": 50
+    "input_tokens": 73,
+    "cache_creation_tokens": 193911,
+    "cache_read_tokens": 2564323,
+    "output_tokens": 32780,
+    "api_call_count": 58
   }
 }

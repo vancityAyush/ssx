@@ -1,0 +1,1 @@
+I want npm distributution and also allow this sshx tool to run directly in shells of windows, linux and mac, research on this and use context7
