@@ -106,6 +106,33 @@ $settingsUrls = @{
     3 = "https://dev.azure.com/_usersSettings/keys"
 }
 
+# --- Auto-detect from git remote ---
+$detectedProvider = $null
+$detectedUsername = ""
+$detectedEmail = ""
+
+if (Get-Command git -ErrorAction SilentlyContinue) {
+    $detectedEmail = & git config --global user.email 2>$null
+    $detectedUsername = & git config --global user.name 2>$null
+
+    $remoteUrl = & git remote get-url origin 2>$null
+    if ($remoteUrl) {
+        if ($remoteUrl -match 'bitbucket\.org')              { $detectedProvider = 0 }
+        elseif ($remoteUrl -match 'github\.com')              { $detectedProvider = 1 }
+        elseif ($remoteUrl -match 'gitlab\.com')              { $detectedProvider = 2 }
+        elseif ($remoteUrl -match 'dev\.azure\.com|vs-ssh\.visualstudio\.com') { $detectedProvider = 3 }
+
+        # Extract username from remote URL if not in git config
+        if (-not $detectedUsername) {
+            if ($remoteUrl -match 'git@[^:]+:([^/]+)/') {
+                $detectedUsername = $matches[1]
+            } elseif ($remoteUrl -match 'https://[^/]+/([^/]+)/') {
+                $detectedUsername = $matches[1]
+            }
+        }
+    }
+}
+
 # --- State for cleanup ---
 $script:keygenStarted = $false
 $script:keygenDone = $false
@@ -120,11 +147,27 @@ try {
     Set-Location $sshDir
 
     # Provider selection
-    $option = Show-Menu -Title "Select your Git provider:" -Options $providers
+    if ($null -ne $detectedProvider) {
+        $providerName = $providers[$detectedProvider]
+        Write-Host "Detected provider from git remote: $providerName"
+        $useDetected = Read-Host "Use ${providerName}? (Y/N)"
+        if ($useDetected -match '^[Yy]' -or $useDetected -eq '') {
+            $option = $detectedProvider
+        } else {
+            $option = Show-Menu -Title "Select your Git provider:" -Options $providers
+        }
+    } else {
+        $option = Show-Menu -Title "Select your Git provider:" -Options $providers
+    }
 
     # Email input
     do {
-        $email = Read-Host "Enter your email"
+        if ($detectedEmail) {
+            $email = Read-Host "Enter your email [$detectedEmail]"
+            if ([string]::IsNullOrWhiteSpace($email)) { $email = $detectedEmail }
+        } else {
+            $email = Read-Host "Enter your email"
+        }
     } while (-not (Test-EmailAddress $email))
 
     # Key name input
@@ -153,7 +196,7 @@ try {
     # Optional git config setup
     $configGit = Read-Host "Do you want to configure git username and email? (Y/N)"
     if ($configGit -match '^[Yy]') {
-        $defaultUsername = ($email -split '@')[0]
+        $defaultUsername = if ($detectedUsername) { $detectedUsername } else { ($email -split '@')[0] }
         $gitUsername = Read-Host "Enter your git username [$defaultUsername]"
         if ([string]::IsNullOrWhiteSpace($gitUsername)) { $gitUsername = $defaultUsername }
 

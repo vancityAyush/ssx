@@ -111,6 +111,42 @@ detect_os() {
     esac
 }
 
+# --- Auto-detect from git remote ---
+detected_provider=""
+detected_username=""
+detected_email=""
+
+if command -v git &> /dev/null; then
+    # Try to get email/username from existing git config
+    detected_email=$(git config --global user.email 2>/dev/null || true)
+    detected_username=$(git config --global user.name 2>/dev/null || true)
+
+    # Try to detect provider from git remote
+    remote_url=$(git remote get-url origin 2>/dev/null || true)
+    if [ -n "$remote_url" ]; then
+        case "$remote_url" in
+            *bitbucket.org*)    detected_provider="1" ;;
+            *github.com*)       detected_provider="2" ;;
+            *gitlab.com*)       detected_provider="3" ;;
+            *dev.azure.com*|*vs-ssh.visualstudio.com*) detected_provider="4" ;;
+        esac
+
+        # Extract username from remote URL
+        # SSH: git@github.com:username/repo.git
+        # HTTPS: https://github.com/username/repo.git
+        if [ -z "$detected_username" ]; then
+            case "$remote_url" in
+                git@*:*/*)
+                    detected_username=$(echo "$remote_url" | sed 's/.*://;s/\/.*//')
+                    ;;
+                https://*/*)
+                    detected_username=$(echo "$remote_url" | sed 's|https://[^/]*/||;s|/.*||')
+                    ;;
+            esac
+        fi
+    fi
+fi
+
 # Navigate to SSH directory with error handling
 cd "$HOME" || { echo "Error: Cannot access home directory"; exit 1; }
 mkdir -p .ssh || { echo "Error: Cannot create .ssh directory"; exit 1; }
@@ -118,12 +154,32 @@ cd .ssh || { echo "Error: Cannot access .ssh directory"; exit 1; }
 
 # Get provider selection with arrow-key menu
 providers=("Bitbucket" "GitHub" "GitLab" "Azure DevOps")
-option=$(select_option "Select your Git provider:" "${providers[@]}")
-# Convert from 0-based to 1-based to match existing logic
-option=$((option + 1))
+if [ -n "$detected_provider" ]; then
+    detected_index=$((detected_provider - 1))
+    echo "Detected provider from git remote: ${providers[$detected_index]}"
+    read -r -p "Use ${providers[$detected_index]}? (Y/N): " useDetected
+    case "$useDetected" in
+        [Yy]|[Yy][Ee][Ss]|"")
+            option="$detected_provider"
+            ;;
+        *)
+            option=$(select_option "Select your Git provider:" "${providers[@]}")
+            option=$((option + 1))
+            ;;
+    esac
+else
+    option=$(select_option "Select your Git provider:" "${providers[@]}")
+    # Convert from 0-based to 1-based to match existing logic
+    option=$((option + 1))
+fi
 
 while true; do
-    read -r -p "Enter your email: " email
+    if [ -n "$detected_email" ]; then
+        read -r -p "Enter your email [$detected_email]: " email
+        email="${email:-$detected_email}"
+    else
+        read -r -p "Enter your email: " email
+    fi
     # Basic email validation - check for @ symbol and dot
     case "$email" in
         *@*.*)
@@ -173,8 +229,8 @@ read -r -p "Do you want to configure git username and email? (Y/N): " configGit
 
 case "$configGit" in
     [Yy]|[Yy][Ee][Ss])
-        # Default username from email prefix
-        default_username="${email%%@*}"
+        # Default username: detected from git config/remote, or email prefix
+        default_username="${detected_username:-${email%%@*}}"
         read -r -p "Enter your git username [$default_username]: " gitUsername
         gitUsername="${gitUsername:-$default_username}"
 
