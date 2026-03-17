@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Ensure the script is running under bash (not sh/dash)
+if [ -z "${BASH_VERSION:-}" ]; then
+    echo "Error: This script requires bash. Please run: bash ssh.sh" >&2
+    exit 1
+fi
+
 # Exit on any error
 set -e
 
@@ -12,25 +18,25 @@ select_option() {
     local count=${#options[@]}
 
     # Hide cursor
-    printf '\e[?25l' >&2
+    printf '\e[?25l' > /dev/tty
 
     # Print title and options
-    printf '%s\n' "$title" >&2
+    printf '%s\n' "$title" > /dev/tty
     for i in "${!options[@]}"; do
         if [ "$i" -eq "$selected" ]; then
-            printf '  \e[1;32m> %s\e[0m\n' "${options[$i]}" >&2
+            printf '  \e[1;32m> %s\e[0m\n' "${options[$i]}" > /dev/tty
         else
-            printf '    %s\n' "${options[$i]}" >&2
+            printf '    %s\n' "${options[$i]}" > /dev/tty
         fi
     done
 
     while true; do
-        # Read a single key
-        IFS= read -rsn1 key
+        # Read a single key directly from the terminal
+        IFS= read -rsn1 key < /dev/tty
 
         # Handle escape sequences (arrow keys)
         if [ "$key" = $'\x1b' ]; then
-            read -rsn2 -t 0.1 key
+            read -rsn2 -t 0.1 key < /dev/tty
             case "$key" in
                 '[A') # Up arrow
                     ((selected > 0)) && ((selected--))
@@ -41,19 +47,19 @@ select_option() {
             esac
         elif [ "$key" = "" ] || [ "$key" = " " ]; then
             # Enter or Space - confirm selection
-            printf '\e[?25h' >&2 # Show cursor
+            printf '\e[?25h' > /dev/tty # Show cursor
             echo "$selected"
             return
         fi
 
         # Redraw: move cursor up (count + 1 for title) and reprint
-        printf '\e[%dA' "$((count + 1))" >&2
-        printf '\r\e[K%s\n' "$title" >&2
+        printf '\e[%dA' "$((count + 1))" > /dev/tty
+        printf '\r\e[K%s\n' "$title" > /dev/tty
         for i in "${!options[@]}"; do
             if [ "$i" -eq "$selected" ]; then
-                printf '\r\e[K  \e[1;32m> %s\e[0m\n' "${options[$i]}" >&2
+                printf '\r\e[K  \e[1;32m> %s\e[0m\n' "${options[$i]}" > /dev/tty
             else
-                printf '\r\e[K    %s\n' "${options[$i]}" >&2
+                printf '\r\e[K    %s\n' "${options[$i]}" > /dev/tty
             fi
         done
     done
@@ -82,7 +88,7 @@ KEYNAME_FOR_CLEANUP=""
 ORIGINAL_DIR="$(pwd)"
 
 cleanup() {
-    printf '\e[?25h' # Restore cursor
+    printf '\e[?25h' > /dev/tty # Restore cursor
     cd "$ORIGINAL_DIR" 2>/dev/null || true
     if [ "$KEYGEN_STARTED" = true ] && [ "$KEYGEN_DONE" != true ] && [ -n "$KEYNAME_FOR_CLEANUP" ]; then
         echo ""
