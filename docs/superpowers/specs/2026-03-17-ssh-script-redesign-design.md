@@ -33,7 +33,7 @@ Two scripts with feature parity:
 
 ## Interactive Menu — Bash
 
-Bundle bash-tui-toolkit's `list` function and its minimal dependencies (`_cursor_up`, `_cursor_down`, `_clear_line`, raw key reading) into a `# --- TUI Functions ---` block at the top of `ssh.sh`. Approximately 40 lines of self-contained TUI code.
+Bundle bash-tui-toolkit's `list` function and its minimal dependencies (`_cursor_up`, `_cursor_down`, `_clear_line`, raw key reading) into a `# --- TUI Functions ---` block at the top of `ssh.sh`. Approximately 40 lines of self-contained TUI code. bash-tui-toolkit is MIT-licensed, so bundling is permitted.
 
 Usage:
 ```bash
@@ -82,10 +82,23 @@ cleanup() {
         # Remove last config block if it was partially written
     fi
 }
-trap cleanup EXIT
+trap cleanup EXIT INT TERM
 ```
 
 PowerShell equivalent uses `try/catch/finally`.
+
+## PowerShell SSH Agent Handling
+
+On Windows, the OpenSSH Authentication Agent service must be started:
+
+```powershell
+if ((Get-Service ssh-agent).Status -ne 'Running') {
+    Start-Service ssh-agent
+}
+ssh-add "$keyPath"
+```
+
+On Linux/macOS with pwsh, use `ssh-agent` and `ssh-add` the same as bash.
 
 ## Platform Detection
 
