@@ -225,7 +225,7 @@ copy_to_clipboard() {
             elif command -v clip &> /dev/null; then
                 clip < "$file" && success=true
             elif command -v powershell.exe &> /dev/null; then
-                powershell.exe -NoProfile -Command "Set-Clipboard -Value (Get-Content -Raw -Path \"$file\")" && success=true
+                SSHSCRIPT_CLIP_FILE="$file" powershell.exe -NoProfile -Command "Set-Clipboard -Value (Get-Content -Raw -LiteralPath \$env:SSHSCRIPT_CLIP_FILE)" && success=true
             fi
             ;;
     esac
@@ -285,7 +285,7 @@ open_settings_page() {
                 cmd.exe /c start "$settings_url" && echo "✓ Browser opened successfully!"
                 return 0
             elif command -v powershell.exe &> /dev/null; then
-                powershell.exe -NoProfile -Command "Start-Process \"$settings_url\"" && echo "✓ Browser opened successfully!"
+                SSHSCRIPT_SETTINGS_URL="$settings_url" powershell.exe -NoProfile -Command "Start-Process -FilePath \$env:SSHSCRIPT_SETTINGS_URL" && echo "✓ Browser opened successfully!"
                 return 0
             fi
             ;;
