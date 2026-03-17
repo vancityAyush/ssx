@@ -1,6 +1,6 @@
 # SSH Script
 
-This cross-platform script automates the process of generating and configuring SSH keys for Bitbucket, GitHub, GitLab, or Azure DevOps. Available in both Bash and PowerShell, compatible with macOS, Linux, Windows (Git Bash/WSL/PowerShell).
+Cross-platform SSH key management for Bitbucket, GitHub, GitLab, and Azure DevOps. Available as **`sshx`** (recommended Rust CLI — single binary, zero dependencies) or as shell scripts (`ssh.sh` for Bash/Zsh, `ssh.ps1` for PowerShell). Compatible with macOS, Linux, Windows, and WSL.
 
 ## Features
 
@@ -80,6 +80,117 @@ chmod +x ssh.sh && ./ssh.sh
 # PowerShell
 ./ssh.ps1
 ```
+
+---
+
+## sshx — Rust CLI (Recommended)
+
+`sshx` is a cross-platform Rust CLI that replaces the shell scripts with a single binary. It provides a hybrid interface: fully interactive when run with no arguments, fully scriptable via subcommands and flags.
+
+### Install via Script (macOS / Linux / WSL / Git Bash)
+
+```bash
+# One-liner — detects your platform and installs the latest release
+curl -fsSL https://raw.githubusercontent.com/vancityAyush/ssh_script/main/sshx/install.sh | sh
+```
+
+### Install via Cargo (All Platforms)
+
+Requires [Rust](https://rustup.rs/) to be installed.
+
+```bash
+cargo install sshx
+```
+
+### Install on Windows (PowerShell)
+
+```powershell
+# Download the latest Windows binary from GitHub Releases
+$release = Invoke-RestMethod "https://api.github.com/repos/vancityAyush/ssh_script/releases" |
+    Where-Object { $_.tag_name -like "sshx-v*" } | Select-Object -First 1
+$url = ($release.assets | Where-Object { $_.name -like "*windows*" }).browser_download_url
+Invoke-WebRequest -Uri $url -OutFile "$env:LOCALAPPDATA\sshx.exe"
+
+# Add to PATH (if not already there)
+$path = [Environment]::GetEnvironmentVariable("PATH", "User")
+if ($path -notlike "*$env:LOCALAPPDATA*") {
+    [Environment]::SetEnvironmentVariable("PATH", "$path;$env:LOCALAPPDATA", "User")
+}
+```
+
+Or install via Cargo:
+
+```powershell
+cargo install sshx
+```
+
+### Build from Source (All Platforms)
+
+```bash
+git clone https://github.com/vancityAyush/ssh_script.git
+cd ssh_script/sshx
+cargo build --release
+
+# The binary is at target/release/sshx (or sshx.exe on Windows)
+# Move it to a directory in your PATH:
+
+# macOS / Linux / WSL
+sudo cp target/release/sshx /usr/local/bin/
+
+# Windows (PowerShell)
+# Copy-Item target\release\sshx.exe $env:LOCALAPPDATA\sshx.exe
+```
+
+### Usage
+
+```bash
+# Full interactive setup (no arguments needed)
+sshx
+
+# Non-interactive setup with flags
+sshx setup github -e you@example.com -k mykey
+
+# Test SSH connection
+sshx test github.com
+
+# List configured SSH hosts
+sshx list
+
+# Copy public key to clipboard again
+sshx copy mykey
+
+# Remove a key (files + config + agent)
+sshx remove mykey
+
+# View SSH config entries
+sshx config
+
+# Manage SSH agent
+sshx agent list
+sshx agent add mykey
+```
+
+### Platform-Specific Notes
+
+| Platform | Shell | Install Method |
+|----------|-------|----------------|
+| **macOS (Terminal / iTerm2)** | bash / zsh | Install script, Cargo, or build from source |
+| **macOS (Apple Silicon)** | bash / zsh | Same — binary is universal (x86_64 + aarch64) |
+| **Linux (Ubuntu / Debian)** | bash / zsh | Install script, Cargo, or `sudo apt install build-essential` + build from source |
+| **Linux (Fedora)** | bash / zsh | Install script, Cargo, or `sudo dnf install gcc` + build from source |
+| **Linux (Arch)** | bash / zsh | Install script, Cargo, or `sudo pacman -S base-devel` + build from source |
+| **Windows (PowerShell)** | PowerShell 5.1+ / pwsh 7+ | PowerShell download script or Cargo |
+| **Windows (Git Bash)** | bash | Install script or Cargo |
+| **Windows (CMD)** | cmd | Cargo or manual download from GitHub Releases |
+| **WSL** | bash / zsh | Install script (auto-detects WSL) or Cargo |
+
+### Prerequisites
+
+- **SSH client**: `ssh-keygen` and `ssh-add` (pre-installed on macOS, Linux, WSL; install via [Git for Windows](https://gitforwindows.org/) on Windows)
+- **Git**: For git config integration and SSH testing
+- **Rust** *(only for `cargo install` or building from source)*: Install via [rustup.rs](https://rustup.rs/)
+
+---
 
 ## Copy SSH Public Key to Clipboard
 
