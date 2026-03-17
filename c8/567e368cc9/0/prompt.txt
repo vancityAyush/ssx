@@ -1,2 +1,6 @@
 Use industry standard method to update this project as the cli tool of what it tries to achieve and maybe simplify the flow. If needed build
     the project from scratch. use context7
+
+---
+
+use askUserQuestion Tool
