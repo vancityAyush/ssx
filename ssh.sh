@@ -3,6 +3,92 @@
 # Exit on any error
 set -e
 
+# --- TUI: Arrow-key selection menu ---
+select_option() {
+    local title="$1"
+    shift
+    local options=("$@")
+    local selected=0
+    local count=${#options[@]}
+
+    # Hide cursor
+    printf '\e[?25l' >&2
+
+    # Print title and options
+    printf '%s\n' "$title" >&2
+    for i in "${!options[@]}"; do
+        if [ "$i" -eq "$selected" ]; then
+            printf '  \e[1;32m> %s\e[0m\n' "${options[$i]}" >&2
+        else
+            printf '    %s\n' "${options[$i]}" >&2
+        fi
+    done
+
+    while true; do
+        # Read a single key
+        IFS= read -rsn1 key
+
+        # Handle escape sequences (arrow keys)
+        if [ "$key" = $'\x1b' ]; then
+            read -rsn2 -t 0.1 key
+            case "$key" in
+                '[A') # Up arrow
+                    ((selected > 0)) && ((selected--))
+                    ;;
+                '[B') # Down arrow
+                    ((selected < count - 1)) && ((selected++))
+                    ;;
+            esac
+        elif [ "$key" = "" ] || [ "$key" = " " ]; then
+            # Enter or Space - confirm selection
+            printf '\e[?25h' >&2 # Show cursor
+            echo "$selected"
+            return
+        fi
+
+        # Redraw: move cursor up (count + 1 for title) and reprint
+        printf '\e[%dA' "$((count + 1))" >&2
+        printf '\r\e[K%s\n' "$title" >&2
+        for i in "${!options[@]}"; do
+            if [ "$i" -eq "$selected" ]; then
+                printf '\r\e[K  \e[1;32m> %s\e[0m\n' "${options[$i]}" >&2
+            else
+                printf '\r\e[K    %s\n' "${options[$i]}" >&2
+            fi
+        done
+    done
+}
+
+# --- Validation helpers ---
+validate_no_spaces() {
+    local input="$1"
+    local label="$2"
+    if [ -z "$input" ]; then
+        echo "Error: $label cannot be empty"
+        return 1
+    fi
+    if [ "$input" != "$(echo "$input" | tr -d ' ')" ]; then
+        echo "Error: $label cannot contain spaces"
+        return 1
+    fi
+    return 0
+}
+
+# --- Cleanup state ---
+KEYGEN_STARTED=false
+KEYGEN_DONE=false
+KEYNAME_FOR_CLEANUP=""
+
+cleanup() {
+    printf '\e[?25h' # Restore cursor
+    if [ "$KEYGEN_STARTED" = true ] && [ "$KEYGEN_DONE" != true ] && [ -n "$KEYNAME_FOR_CLEANUP" ]; then
+        echo ""
+        echo "Cleaning up partial SSH key files..."
+        rm -f "$HOME/.ssh/$KEYNAME_FOR_CLEANUP" "$HOME/.ssh/$KEYNAME_FOR_CLEANUP.pub"
+    fi
+}
+trap cleanup EXIT INT TERM
+
 # Function to detect operating system
 detect_os() {
     case "$OSTYPE" in
@@ -30,30 +116,17 @@ cd "$HOME" || { echo "Error: Cannot access home directory"; exit 1; }
 mkdir -p .ssh || { echo "Error: Cannot create .ssh directory"; exit 1; }
 cd .ssh || { echo "Error: Cannot access .ssh directory"; exit 1; }
 
-# Get user input with validation
-while true; do
-    echo "Select an option:"
-    echo "1. Bitbucket"
-    echo "2. Github"
-    echo "3. GitLab"
-    echo "4. Azure DevOps"
-    read -r -p "Enter your choice (1-4): " option
-    
-    case "$option" in
-        1|2|3|4)
-            break
-            ;;
-        *)
-            echo "Error: Please enter a valid option (1, 2, 3, or 4)"
-            ;;
-    esac
-done
+# Get provider selection with arrow-key menu
+providers=("Bitbucket" "GitHub" "GitLab" "Azure DevOps")
+option=$(select_option "Select your Git provider:" "${providers[@]}")
+# Convert from 0-based to 1-based to match existing logic
+option=$((option + 1))
 
 while true; do
     read -r -p "Enter your email: " email
     # Basic email validation - check for @ symbol and dot
     case "$email" in
-        *@*.*) 
+        *@*.*)
             # Additional check to ensure it's not just @.
             if [ "${email}" != "@." ] && [ -n "${email%%@*}" ] && [ -n "${email##*@}" ]; then
                 break
@@ -69,42 +142,47 @@ done
 
 while true; do
     read -r -p "Enter your SSH key name: " keyName
-    if [ -n "$keyName" ]; then
-        # Check for spaces by comparing with version that has spaces removed
-        keyName_no_spaces=$(echo "$keyName" | tr -d ' ')
-        if [ "$keyName" = "$keyName_no_spaces" ]; then
-            break
-        else
-            echo "Error: Key name cannot be empty or contain spaces"
-        fi
-    else
-        echo "Error: Key name cannot be empty or contain spaces"
+    if validate_no_spaces "$keyName" "Key name"; then
+        break
     fi
 done
 
-# Generate SSH key based on platform preference
+# Generate SSH key (ed25519 for all providers)
 echo "Generating SSH key..."
-if [ "$option" = "1" ]; then
-    # Bitbucket - use ed25519 (no -b flag for ed25519)
-    ssh-keygen -t ed25519 -C "$email" -f "$keyName" -N ""
-elif [ "$option" = "2" ]; then
-    # GitHub - use ed25519
-    ssh-keygen -t ed25519 -C "$email" -f "$keyName" -N ""
-elif [ "$option" = "3" ]; then
-    # GitLab - use RSA with 4096 bits for compatibility
-    ssh-keygen -t rsa -b 4096 -C "$email" -f "$keyName" -N ""
-elif [ "$option" = "4" ]; then
-    # Azure DevOps - use RSA with 4096 bits (minimum 2048 required)
-    ssh-keygen -t rsa -b 4096 -C "$email" -f "$keyName" -N ""
-fi
+KEYGEN_STARTED=true
+KEYNAME_FOR_CLEANUP="$keyName"
+ssh-keygen -t ed25519 -C "$email" -f "$keyName" -N ""
 
 # Verify key was created successfully
 if [ ! -f "$keyName" ] || [ ! -f "$keyName.pub" ]; then
     echo "Error: SSH key generation failed"
     exit 1
 fi
+KEYGEN_DONE=true
 
 echo "SSH key generated successfully!"
+
+# Optional git config setup
+read -r -p "Do you want to configure git username and email? (Y/N): " configGit
+
+case "$configGit" in
+    [Yy]|[Yy][Ee][Ss])
+        # Default username from email prefix
+        default_username="${email%%@*}"
+        read -r -p "Enter your git username [$default_username]: " gitUsername
+        gitUsername="${gitUsername:-$default_username}"
+
+        git config --global user.name "$gitUsername"
+        git config --global user.email "$email"
+
+        echo "Git config updated:"
+        echo "  user.name  = $gitUsername"
+        echo "  user.email = $email"
+        ;;
+    *)
+        echo "Skipping git config setup."
+        ;;
+esac
 
 # Start SSH agent and add key
 echo "Starting SSH agent and adding key..."
@@ -146,7 +224,7 @@ getDefaultHostName() {
 writeConfig() {
     local host="$1"
     local key="$2"
-    
+
     if ! grep -q "Host $host" "$config_file"; then
         {
             printf "\nHost %s\n" "$host"
@@ -168,16 +246,8 @@ case "$choiceHost" in
     [Yy]|[Yy][Ee][Ss])
         while true; do
             read -r -p "Enter your host name (e.g., work.github.com): " hostName
-            if [ -n "$hostName" ]; then
-                # Check for spaces by comparing with version that has spaces removed
-                hostName_no_spaces=$(echo "$hostName" | tr -d ' ')
-                if [ "$hostName" = "$hostName_no_spaces" ]; then
-                    break
-                else
-                    echo "Error: Host name cannot be empty or contain spaces"
-                fi
-            else
-                echo "Error: Host name cannot be empty or contain spaces"
+            if validate_no_spaces "$hostName" "Host name"; then
+                break
             fi
         done
         ;;
@@ -194,7 +264,7 @@ copy_to_clipboard() {
     local os
     os=$(detect_os)
     local success=false
-    
+
     case "$os" in
         "macos")
             if command -v pbcopy &> /dev/null; then
@@ -223,11 +293,11 @@ copy_to_clipboard() {
             fi
             ;;
     esac
-    
+
     if [ "$success" = true ]; then
-        echo "✓ SSH public key copied to clipboard!"
+        echo "SSH public key copied to clipboard!"
     else
-        echo "⚠ Warning: Could not copy to clipboard automatically."
+        echo "Warning: Could not copy to clipboard automatically."
         echo "Please copy the following SSH public key manually:"
     fi
 }
@@ -244,7 +314,7 @@ open_settings_page() {
     local settings_url=""
     local os
     os=$(detect_os)
-    
+
     case "$option" in
         "1") settings_url="https://bitbucket.org/account/settings/ssh-keys/" ;;
         "2") settings_url="https://github.com/settings/keys" ;;
@@ -252,37 +322,37 @@ open_settings_page() {
         "4") settings_url="https://dev.azure.com/_usersSettings/keys" ;;
         *) echo "Error: Invalid option for opening settings page"; return 1 ;;
     esac
-    
+
     echo "Opening SSH settings page in your browser..."
-    
+
     case "$os" in
         "macos")
             if command -v open &> /dev/null; then
-                open "$settings_url" && echo "✓ Browser opened successfully!"
+                open "$settings_url" && echo "Browser opened successfully!"
                 return 0
             fi
             ;;
         "linux"|"wsl")
             if command -v xdg-open &> /dev/null; then
-                xdg-open "$settings_url" &> /dev/null && echo "✓ Browser opened successfully!"
+                xdg-open "$settings_url" &> /dev/null && echo "Browser opened successfully!"
                 return 0
             elif command -v sensible-browser &> /dev/null; then
-                sensible-browser "$settings_url" &> /dev/null && echo "✓ Browser opened successfully!"
+                sensible-browser "$settings_url" &> /dev/null && echo "Browser opened successfully!"
                 return 0
             fi
             ;;
         "windows")
             if command -v start &> /dev/null; then
-                start "$settings_url" && echo "✓ Browser opened successfully!"
+                start "$settings_url" && echo "Browser opened successfully!"
                 return 0
             elif command -v cmd.exe &> /dev/null; then
-                cmd.exe /c start "$settings_url" && echo "✓ Browser opened successfully!"
+                cmd.exe /c start "$settings_url" && echo "Browser opened successfully!"
                 return 0
             fi
             ;;
     esac
-    
-    echo "⚠ Could not automatically open browser."
+
+    echo "Could not automatically open browser."
     echo "Please manually visit: $settings_url"
 }
 
@@ -294,19 +364,19 @@ echo "Add the SSH key to your Git provider, then test the connection."
 while true; do
     read -r -p "Press T to test SSH key, or any other key to exit: " choice
     echo ""
-    
+
     case "$choice" in
         [Tt]|[Tt][Ee][Ss][Tt])
             echo "Testing SSH connection to git@$hostName..."
-            if ssh -T "git@$hostName"; then
-                echo "✓ SSH connection successful!"
-            else
-                case $? in
-                    1) echo "✓ SSH key is working! (Exit code 1 is normal for Git SSH test)" ;;
-                    255) echo "✗ SSH connection failed. Please check your SSH key setup." ;;
-                    *) echo "⚠ SSH test completed with exit code $?" ;;
-                esac
-            fi
+            exit_code=0
+            ssh -T "git@$hostName" 2>&1 || exit_code=$?
+
+            case $exit_code in
+                0) echo "SSH connection successful!" ;;
+                1) echo "SSH key is working! (Exit code 1 is normal for Git SSH test)" ;;
+                255) echo "SSH connection failed. Please check your SSH key setup." ;;
+                *) echo "SSH test completed with exit code $exit_code" ;;
+            esac
             ;;
         *)
             echo "Exiting script. SSH setup complete!"
@@ -321,10 +391,10 @@ echo ""
 echo "==========================================="
 echo "SSH Setup Complete!"
 echo "==========================================="
-echo "✓ SSH key generated: $keyName"
-echo "✓ SSH key added to agent"
-echo "✓ SSH config updated"
-echo "✓ Public key copied to clipboard (if supported)"
+echo "SSH key generated: $keyName"
+echo "SSH key added to agent"
+echo "SSH config updated"
+echo "Public key copied to clipboard (if supported)"
 echo ""
 echo "Next steps:"
 echo "1. Add the public key to your Git provider"
