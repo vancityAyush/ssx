@@ -1,9 +1,11 @@
 {
   "cli_version": "0.5.0",
   "checkpoint_id": "a161f987ea78",
+  "session_id": "f551b70d-95fe-4870-a083-55dbf8c76634",
   "strategy": "manual-commit",
+  "created_at": "2026-03-17T18:01:31.262004Z",
   "branch": "main",
-  "checkpoints_count": 4,
+  "checkpoints_count": 1,
   "files_touched": [
     ".github/workflows/sshx-release.yml",
     "ssh.sh",
@@ -33,25 +35,25 @@
     "sshx/src/ssh/mod.rs",
     "sshx/src/ui.rs"
   ],
-  "sessions": [
-    {
-      "metadata": "/a1/61f987ea78/0/metadata.json",
-      "transcript": "/a1/61f987ea78/0/full.jsonl",
-      "content_hash": "/a1/61f987ea78/0/content_hash.txt",
-      "prompt": "/a1/61f987ea78/0/prompt.txt"
-    },
-    {
-      "metadata": "/a1/61f987ea78/1/metadata.json",
-      "transcript": "/a1/61f987ea78/1/full.jsonl",
-      "content_hash": "/a1/61f987ea78/1/content_hash.txt",
-      "prompt": "/a1/61f987ea78/1/prompt.txt"
-    }
-  ],
+  "agent": "Claude Code",
+  "turn_id": "d6c690d49e4f",
   "token_usage": {
-    "input_tokens": 125,
-    "cache_creation_tokens": 398546,
-    "cache_read_tokens": 4675375,
-    "output_tokens": 39305,
-    "api_call_count": 97
+    "input_tokens": 47,
+    "cache_creation_tokens": 166448,
+    "cache_read_tokens": 1783953,
+    "output_tokens": 22934,
+    "api_call_count": 41
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-17T18:01:31.17228Z",
+    "agent_lines": 2699,
+    "human_added": 1,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 2700,
+    "agent_percentage": 99.96296296296296
   }
 }
