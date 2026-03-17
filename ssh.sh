@@ -147,11 +147,17 @@ while true; do
     fi
 done
 
-# Generate SSH key (ed25519 for all providers)
+# Generate SSH key
 echo "Generating SSH key..."
 KEYGEN_STARTED=true
 KEYNAME_FOR_CLEANUP="$keyName"
-ssh-keygen -t ed25519 -C "$email" -f "$keyName" -N ""
+if [ "$option" = "4" ]; then
+    # Azure DevOps requires RSA keys (minimum 2048-bit)
+    ssh-keygen -t rsa -b 4096 -C "$email" -f "$keyName" -N ""
+else
+    # GitHub, Bitbucket, GitLab support ed25519
+    ssh-keygen -t ed25519 -C "$email" -f "$keyName" -N ""
+fi
 
 # Verify key was created successfully
 if [ ! -f "$keyName" ] || [ ! -f "$keyName.pub" ]; then

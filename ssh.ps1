@@ -132,11 +132,17 @@ try {
         $keyName = Read-Host "Enter your SSH key name"
     } while (-not (Test-NoSpaces -Value $keyName -Label "Key name"))
 
-    # Generate SSH key (ed25519 for all providers)
+    # Generate SSH key
     Write-Host "Generating SSH key..."
     $script:keygenStarted = $true
     $script:keyPath = Join-Path $sshDir $keyName
-    & ssh-keygen -t ed25519 -C $email -f $script:keyPath -N '""'
+    if ($option -eq 3) {
+        # Azure DevOps requires RSA keys (minimum 2048-bit)
+        & ssh-keygen -t rsa -b 4096 -C $email -f $script:keyPath -N '""'
+    } else {
+        # GitHub, Bitbucket, GitLab support ed25519
+        & ssh-keygen -t ed25519 -C $email -f $script:keyPath -N '""'
+    }
 
     if (-not (Test-Path $script:keyPath) -or -not (Test-Path "$($script:keyPath).pub")) {
         throw "SSH key generation failed"
