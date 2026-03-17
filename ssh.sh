@@ -79,8 +79,11 @@ KEYGEN_STARTED=false
 KEYGEN_DONE=false
 KEYNAME_FOR_CLEANUP=""
 
+ORIGINAL_DIR="$(pwd)"
+
 cleanup() {
     printf '\e[?25h' # Restore cursor
+    cd "$ORIGINAL_DIR" 2>/dev/null || true
     if [ "$KEYGEN_STARTED" = true ] && [ "$KEYGEN_DONE" != true ] && [ -n "$KEYNAME_FOR_CLEANUP" ]; then
         echo ""
         echo "Cleaning up partial SSH key files..."
@@ -224,28 +227,6 @@ KEYGEN_DONE=true
 
 echo "SSH key generated successfully!"
 
-# Optional git config setup
-read -r -p "Do you want to configure git username and email? (Y/N): " configGit
-
-case "$configGit" in
-    [Yy]|[Yy][Ee][Ss])
-        # Default username: detected from git config/remote, or email prefix
-        default_username="${detected_username:-${email%%@*}}"
-        read -r -p "Enter your git username [$default_username]: " gitUsername
-        gitUsername="${gitUsername:-$default_username}"
-
-        git config --global user.name "$gitUsername"
-        git config --global user.email "$email"
-
-        echo "Git config updated:"
-        echo "  user.name  = $gitUsername"
-        echo "  user.email = $email"
-        ;;
-    *)
-        echo "Skipping git config setup."
-        ;;
-esac
-
 # Start SSH agent and add key
 echo "Starting SSH agent and adding key..."
 OS=$(detect_os)
@@ -287,18 +268,25 @@ writeConfig() {
     local host="$1"
     local key="$2"
 
-    if ! grep -q "Host $host" "$config_file"; then
-        {
-            printf "\nHost %s\n" "$host"
-            printf "  HostName %s\n" "$(getDefaultHostName)"
-            printf "  AddKeysToAgent yes\n"
-            printf "  IdentityFile ~/.ssh/%s\n" "$key"
-        } >> "$config_file"
-        echo "SSH config updated successfully!"
-    else
-        echo "Error: Host '$host' already exists in config!"
-        exit 1
+    if grep -q "Host $host" "$config_file"; then
+        echo "Host '$host' already exists in config!"
+        read -r -p "Do you want to replace it? (Y/N): " replaceChoice
+        if [[ "$replaceChoice" =~ ^[Yy] ]]; then
+            # Remove existing host block (Host line + indented lines that follow)
+            sed -i.bak "/^Host $host$/,/^[^ ]/{/^Host $host$/d;/^  /d;}" "$config_file"
+            rm -f "${config_file}.bak"
+        else
+            echo "Skipping SSH config update."
+            return
+        fi
     fi
+    {
+        printf "\nHost %s\n" "$host"
+        printf "  HostName %s\n" "$(getDefaultHostName)"
+        printf "  AddKeysToAgent yes\n"
+        printf "  IdentityFile ~/.ssh/%s\n" "$key"
+    } >> "$config_file"
+    echo "SSH config updated successfully!"
 }
 
 # Get hostname configuration
@@ -319,6 +307,40 @@ case "$choiceHost" in
 esac
 
 writeConfig "$hostName" "$keyName"
+
+# Optional git config setup (per-key, using includeIf)
+read -r -p "Do you want to configure git username and email for this key? (Y/N): " configGit
+
+case "$configGit" in
+    [Yy]|[Yy][Ee][Ss])
+        default_username="${detected_username:-${email%%@*}}"
+        read -r -p "Enter your git username [$default_username]: " gitUsername
+        gitUsername="${gitUsername:-$default_username}"
+
+        gitconfigFile="$HOME/.ssh/.gitconfig-$keyName"
+        cat > "$gitconfigFile" <<EOF
+[user]
+    name = $gitUsername
+    email = $email
+EOF
+
+        defaultHost=$(getDefaultHostName)
+        includeHost="$hostName"
+        if [ "$hostName" = "$defaultHost" ]; then
+            includeHost="$defaultHost"
+        fi
+        git config --global "includeIf.hasconfig:remote.*.url:git@${includeHost}:*/**" ".path" "$gitconfigFile"
+        git config --global "includeIf.hasconfig:remote.*.url:ssh://git@${includeHost}/**" ".path" "$gitconfigFile"
+
+        echo "Git config for this key saved to $gitconfigFile"
+        echo "  user.name  = $gitUsername"
+        echo "  user.email = $email"
+        echo "  (applied automatically for repos with $includeHost remotes)"
+        ;;
+    *)
+        echo "Skipping git config setup."
+        ;;
+esac
 
 # Cross-platform clipboard functionality
 copy_to_clipboard() {
@@ -431,14 +453,14 @@ while true; do
         [Tt]|[Tt][Ee][Ss][Tt])
             echo "Testing SSH connection to git@$hostName..."
             exit_code=0
-            ssh -T -o StrictHostKeyChecking=accept-new -o BatchMode=yes "git@$hostName" 2>&1 || exit_code=$?
+            ssh_output=$(ssh -T -i "$HOME/.ssh/$keyName" -o StrictHostKeyChecking=accept-new -o BatchMode=yes "git@$hostName" 2>&1) || exit_code=$?
+            echo "$ssh_output"
 
-            case $exit_code in
-                0) echo "SSH connection successful!" ;;
-                1) echo "SSH key is working! (Exit code 1 is normal for Git SSH test)" ;;
-                255) echo "SSH connection failed. Please check your SSH key setup." ;;
-                *) echo "SSH test completed with exit code $exit_code" ;;
-            esac
+            if [ "$exit_code" -eq 0 ] || [ "$exit_code" -eq 1 ] || echo "$ssh_output" | grep -qi "successfully authenticated\|Shell access is not supported"; then
+                echo "SSH key is working!"
+            else
+                echo "SSH connection failed. Please check your SSH key setup."
+            fi
             ;;
         *)
             echo "Exiting script. SSH setup complete!"

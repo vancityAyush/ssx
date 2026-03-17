@@ -138,6 +138,8 @@ $script:keygenStarted = $false
 $script:keygenDone = $false
 $script:keyPath = ""
 
+$script:originalDir = Get-Location
+
 try {
     # Navigate to SSH directory
     $sshDir = Join-Path $HOME ".ssh"
@@ -193,31 +195,35 @@ try {
     $script:keygenDone = $true
     Write-Host "SSH key generated successfully!"
 
-    # Optional git config setup
-    $configGit = Read-Host "Do you want to configure git username and email? (Y/N)"
-    if ($configGit -match '^[Yy]') {
-        $defaultUsername = if ($detectedUsername) { $detectedUsername } else { ($email -split '@')[0] }
-        $gitUsername = Read-Host "Enter your git username [$defaultUsername]"
-        if ([string]::IsNullOrWhiteSpace($gitUsername)) { $gitUsername = $defaultUsername }
-
-        & git config --global user.name $gitUsername
-        & git config --global user.email $email
-        Write-Host "Git config updated:"
-        Write-Host "  user.name  = $gitUsername"
-        Write-Host "  user.email = $email"
-    } else {
-        Write-Host "Skipping git config setup."
-    }
-
     # Start SSH agent and add key
     Write-Host "Starting SSH agent and adding key..."
     $platform = Get-Platform
+    $agentOk = $false
     if ($platform -eq "windows") {
         $agentService = Get-Service ssh-agent -ErrorAction SilentlyContinue
         if ($agentService) {
-            if ($agentService.Status -ne 'Running') {
-                Start-Service ssh-agent -ErrorAction SilentlyContinue
+            if ($agentService.StartType -eq 'Disabled') {
+                # Try to enable the service (requires admin)
+                try {
+                    Set-Service ssh-agent -StartupType Manual -ErrorAction Stop
+                } catch {
+                    Write-Host "Warning: ssh-agent service is disabled. Run as Administrator to enable it." -ForegroundColor Yellow
+                }
             }
+            if ($agentService.Status -ne 'Running') {
+                try {
+                    Start-Service ssh-agent -ErrorAction Stop
+                } catch {
+                    Write-Host "Warning: Could not start ssh-agent service. Run as Administrator to start it." -ForegroundColor Yellow
+                }
+            }
+            # Re-check status
+            $agentService = Get-Service ssh-agent -ErrorAction SilentlyContinue
+            if ($agentService -and $agentService.Status -eq 'Running') {
+                $agentOk = $true
+            }
+        } else {
+            Write-Host "Warning: OpenSSH ssh-agent service not found. Install OpenSSH optional feature." -ForegroundColor Yellow
         }
     } else {
         if (-not $env:SSH_AUTH_SOCK) {
@@ -228,8 +234,13 @@ try {
                 }
             }
         }
+        $agentOk = $true
     }
-    & ssh-add $script:keyPath
+    if ($agentOk) {
+        & ssh-add $script:keyPath
+    } else {
+        Write-Host "Skipping ssh-add (agent not running). SSH will use the key from config directly." -ForegroundColor Yellow
+    }
 
     # SSH config
     $configFile = Join-Path $sshDir "config"
@@ -250,18 +261,56 @@ try {
 
     $configContent = Get-Content $configFile -Raw -ErrorAction SilentlyContinue
     if ($configContent -and $configContent -match "Host\s+$([regex]::Escape($hostName))(\s|$)") {
-        throw "Host '$hostName' already exists in config!"
+        Write-Host "Host '$hostName' already exists in config!"
+        $replaceChoice = Read-Host "Do you want to replace it? (Y/N)"
+        if ($replaceChoice -match '^[Yy]') {
+            # Remove existing host block (Host line + indented lines that follow)
+            $escapedHost = [regex]::Escape($hostName)
+            $configContent = $configContent -replace "(?m)\r?\nHost\s+$escapedHost\s*\r?\n(?:\s+.+\r?\n)*", "`n"
+            $configContent = $configContent -replace "(?m)^Host\s+$escapedHost\s*\r?\n(?:\s+.+\r?\n)*", ""
+            Set-Content -Path $configFile -Value $configContent.TrimEnd() -NoNewline
+        } else {
+            Write-Host "Skipping SSH config update."
+        }
     }
 
-    $configBlock = @"
+    if (-not ($replaceChoice) -or ($replaceChoice -match '^[Yy]')) {
+        $configBlock = @"
 
 Host $hostName
   HostName $defaultHostName
   AddKeysToAgent yes
   IdentityFile ~/.ssh/$keyName
 "@
-    Add-Content -Path $configFile -Value $configBlock
-    Write-Host "SSH config updated successfully!"
+        Add-Content -Path $configFile -Value $configBlock
+        Write-Host "SSH config updated successfully!"
+    }
+
+    # Optional git config setup (per-key, using includeIf)
+    $configGit = Read-Host "Do you want to configure git username and email for this key? (Y/N)"
+    if ($configGit -match '^[Yy]') {
+        $defaultUsername = if ($detectedUsername) { $detectedUsername } else { ($email -split '@')[0] }
+        $gitUsername = Read-Host "Enter your git username [$defaultUsername]"
+        if ([string]::IsNullOrWhiteSpace($gitUsername)) { $gitUsername = $defaultUsername }
+
+        $gitconfigFile = Join-Path $sshDir ".gitconfig-$keyName"
+        @"
+[user]
+    name = $gitUsername
+    email = $email
+"@ | Set-Content -Path $gitconfigFile
+
+        $includeHost = if ($hostName -ne $defaultHostName) { $hostName } else { $defaultHostName }
+        & git config --global "includeIf.hasconfig:remote.*.url:git@${includeHost}:*/**" ".path" $gitconfigFile
+        & git config --global "includeIf.hasconfig:remote.*.url:ssh://git@${includeHost}/**" ".path" $gitconfigFile
+
+        Write-Host "Git config for this key saved to $gitconfigFile"
+        Write-Host "  user.name  = $gitUsername"
+        Write-Host "  user.email = $email"
+        Write-Host "  (applied automatically for repos with $includeHost remotes)"
+    } else {
+        Write-Host "Skipping git config setup."
+    }
 
     # Copy to clipboard
     $pubKeyPath = "$($script:keyPath).pub"
@@ -321,15 +370,15 @@ Host $hostName
 
         if ($choice -match '^[Tt]') {
             Write-Host "Testing SSH connection to git@$hostName..."
-            $exitCode = 0
-            & ssh -T -o StrictHostKeyChecking=accept-new -o BatchMode=yes "git@$hostName" 2>&1 | Write-Host
+            $sshOutput = & ssh -T -i $script:keyPath -o StrictHostKeyChecking=accept-new -o BatchMode=yes "git@$hostName" 2>&1
             $exitCode = $LASTEXITCODE
+            $outputStr = $sshOutput -join "`n"
+            Write-Host $outputStr
 
-            switch ($exitCode) {
-                0   { Write-Host "SSH connection successful!" }
-                1   { Write-Host "SSH key is working! (Exit code 1 is normal for Git SSH test)" }
-                255 { Write-Host "SSH connection failed. Please check your SSH key setup." }
-                default { Write-Host "SSH test completed with exit code $exitCode" }
+            if ($exitCode -eq 0 -or $exitCode -eq 1 -or $outputStr -match "successfully authenticated|Shell access is not supported") {
+                Write-Host "SSH key is working!" -ForegroundColor Green
+            } else {
+                Write-Host "SSH connection failed. Please check your SSH key setup." -ForegroundColor Red
             }
         } else {
             Write-Host "Exiting script. SSH setup complete!"
@@ -357,6 +406,8 @@ Host $hostName
     Write-Host "Error: $_" -ForegroundColor Red
     exit 1
 } finally {
+    # Restore original directory
+    Set-Location $script:originalDir
     # Cleanup partial key files on failure
     if ($script:keygenStarted -and -not $script:keygenDone -and $script:keyPath) {
         Write-Host "Cleaning up partial SSH key files..."
