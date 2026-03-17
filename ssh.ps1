@@ -322,7 +322,7 @@ Host $hostName
         if ($choice -match '^[Tt]') {
             Write-Host "Testing SSH connection to git@$hostName..."
             $exitCode = 0
-            & ssh -T "git@$hostName" 2>&1 | Write-Host
+            & ssh -T -o StrictHostKeyChecking=accept-new -o BatchMode=yes "git@$hostName" 2>&1 | Write-Host
             $exitCode = $LASTEXITCODE
 
             switch ($exitCode) {

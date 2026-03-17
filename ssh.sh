@@ -431,7 +431,7 @@ while true; do
         [Tt]|[Tt][Ee][Ss][Tt])
             echo "Testing SSH connection to git@$hostName..."
             exit_code=0
-            ssh -T "git@$hostName" 2>&1 || exit_code=$?
+            ssh -T -o StrictHostKeyChecking=accept-new -o BatchMode=yes "git@$hostName" 2>&1 || exit_code=$?
 
             case $exit_code in
                 0) echo "SSH connection successful!" ;;
