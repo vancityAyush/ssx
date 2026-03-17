@@ -60,10 +60,10 @@ jobs:
 
     - name: Prepare binary assets
       run: |
-        chmod +x ssh.sh
+        chmod +x scripts/ssh.sh
         mkdir -p release
-        cp ssh.sh release/ssh-key-generator.sh
-        cp ssh.ps1 release/ssh-key-generator.ps1
+        cp scripts/ssh.sh release/ssh-key-generator.sh
+        cp scripts/ssh.ps1 release/ssh-key-generator.ps1
 
     - name: Generate release notes
       run: |
@@ -127,8 +127,8 @@ jobs:
         files: |
           release/ssh-key-generator.sh
           release/ssh-key-generator.ps1
-          ssh.sh
-          ssh.ps1
+          scripts/ssh.sh
+          scripts/ssh.ps1
         body_path: release_notes.md
         name: "SSH Key Generator ${{ steps.tag.outputs.name }}"
         draft: false

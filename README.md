@@ -1,12 +1,13 @@
-# SSH Script
+# sshx
 
-Cross-platform SSH key management for Bitbucket, GitHub, GitLab, and Azure DevOps. Available as **`sshx`** (recommended Rust CLI — single binary, zero dependencies) or as shell scripts (`ssh.sh` for Bash/Zsh, `ssh.ps1` for PowerShell). Compatible with macOS, Linux, Windows, and WSL.
+Cross-platform SSH key manager for Git providers (Bitbucket, GitHub, GitLab, Azure DevOps). A fast, single-binary Rust CLI with zero dependencies. Compatible with macOS, Linux, Windows, and WSL.
+
+*(Looking for the legacy shell scripts? See the [Legacy Shell Scripts](#legacy-shell-scripts) section below).*
 
 ## Features
 
-- **Arrow-key interactive menu**: Navigate and select your Git provider with arrow keys (Claude CLI-style UX)
+- **Arrow-key interactive menu**: Navigate and select your Git provider with arrow keys
 - **Cross-platform compatibility**: Works on macOS, Linux, Windows, and WSL
-- **Bash and PowerShell support**: `ssh.sh` for bash/zsh, `ssh.ps1` for PowerShell 5.1+/pwsh 7+
 - **Ed25519 keys for all providers**: Modern, secure, fast key generation
 - **Git config setup**: Optionally configure `git config --global` username and email
 - **Input validation**: Validates email addresses, key names, and user choices
@@ -14,84 +15,17 @@ Cross-platform SSH key management for Bitbucket, GitHub, GitLab, and Azure DevOp
 - **Automatic browser opening**: Opens SSH settings page for your chosen Git provider
 - **SSH agent management**: Properly handles SSH agent across different platforms
 - **SSH connection testing**: Built-in SSH key testing functionality
-- **Cleanup on failure**: Removes partial key files if the script is interrupted
+- **Cleanup on failure**: Removes partial key files if the setup is interrupted
 
-## Platform Support
+## Installation
 
-| Platform | Script | SSH Agent | Clipboard | Browser Opening |
-|----------|--------|-----------|-----------|-----------------|
-| **macOS** | `ssh.sh` / `ssh.ps1` | `ssh-agent` | `pbcopy` | `open` |
-| **Linux** | `ssh.sh` / `ssh.ps1` | `ssh-agent` | `xclip`, `xsel` | `xdg-open` |
-| **Windows (Git Bash)** | `ssh.sh` | `ssh-agent` | `clip.exe` | `cmd.exe start` |
-| **Windows (PowerShell)** | `ssh.ps1` | `ssh-agent` service | `Set-Clipboard` | `Start-Process` |
-| **WSL** | `ssh.sh` / `ssh.ps1` | `ssh-agent` | `clip.exe`, `xclip` | `xdg-open` |
-
-## Quick Installation & Usage
-
-### macOS
-
-```bash
-# One-liner (copy & paste into Terminal)
-curl -fsSLo ssh.sh https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh && bash ssh.sh
-```
-
-### Linux (Ubuntu / Debian / Fedora / Arch)
-
-```bash
-# One-liner using curl
-curl -fsSLo ssh.sh https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh && bash ssh.sh
-```
-
-```bash
-# One-liner using wget
-wget -qO ssh.sh https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh && bash ssh.sh
-```
-
-### Windows (PowerShell)
-
-```powershell
-# One-liner (copy & paste into PowerShell)
-iwr -Uri https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.ps1 -OutFile ssh.ps1; .\ssh.ps1
-```
-
-### Windows (Git Bash)
-
-```bash
-# One-liner (copy & paste into Git Bash)
-curl -fsSLo ssh.sh https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh && bash ssh.sh
-```
-
-### WSL (Windows Subsystem for Linux)
-
-```bash
-# One-liner (copy & paste into WSL terminal)
-curl -fsSLo ssh.sh https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh && bash ssh.sh
-```
-
-### Clone Repository (All Platforms)
-
-```bash
-git clone https://github.com/vancityAyush/ssh_script.git
-cd ssh_script
-
-# Bash/Zsh
-chmod +x ssh.sh && ./ssh.sh
-
-# PowerShell
-./ssh.ps1
-```
-
----
-
-## sshx — Rust CLI (Recommended)
-
-`sshx` is a cross-platform Rust CLI that replaces the shell scripts with a single binary. It provides a hybrid interface: fully interactive when run with no arguments, fully scriptable via subcommands and flags.
+`sshx` provides a hybrid interface: fully interactive when run with no arguments, or fully scriptable via subcommands and flags.
 
 ### Install via Script (macOS / Linux / WSL / Git Bash)
 
 ```bash
 # One-liner — detects your platform and installs the latest release
-curl -fsSL https://raw.githubusercontent.com/vancityAyush/ssh_script/main/sshx/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/vancityAyush/ssh_script/main/install.sh | sh
 ```
 
 ### Install via Cargo (All Platforms)
@@ -119,7 +53,6 @@ if ($path -notlike "*$env:LOCALAPPDATA*") {
 ```
 
 Or install via Cargo:
-
 ```powershell
 cargo install sshx
 ```
@@ -128,7 +61,7 @@ cargo install sshx
 
 ```bash
 git clone https://github.com/vancityAyush/ssh_script.git
-cd ssh_script/sshx
+cd ssh_script
 cargo build --release
 
 # The binary is at target/release/sshx (or sshx.exe on Windows)
@@ -141,7 +74,7 @@ sudo cp target/release/sshx /usr/local/bin/
 # Copy-Item target\release\sshx.exe $env:LOCALAPPDATA\sshx.exe
 ```
 
-### Usage
+## Usage
 
 ```bash
 # Full interactive setup (no arguments needed)
@@ -170,68 +103,6 @@ sshx agent list
 sshx agent add mykey
 ```
 
-### Platform-Specific Notes
-
-| Platform | Shell | Install Method |
-|----------|-------|----------------|
-| **macOS (Terminal / iTerm2)** | bash / zsh | Install script, Cargo, or build from source |
-| **macOS (Apple Silicon)** | bash / zsh | Same — binary is universal (x86_64 + aarch64) |
-| **Linux (Ubuntu / Debian)** | bash / zsh | Install script, Cargo, or `sudo apt install build-essential` + build from source |
-| **Linux (Fedora)** | bash / zsh | Install script, Cargo, or `sudo dnf install gcc` + build from source |
-| **Linux (Arch)** | bash / zsh | Install script, Cargo, or `sudo pacman -S base-devel` + build from source |
-| **Windows (PowerShell)** | PowerShell 5.1+ / pwsh 7+ | PowerShell download script or Cargo |
-| **Windows (Git Bash)** | bash | Install script or Cargo |
-| **Windows (CMD)** | cmd | Cargo or manual download from GitHub Releases |
-| **WSL** | bash / zsh | Install script (auto-detects WSL) or Cargo |
-
-### Prerequisites
-
-- **SSH client**: `ssh-keygen` and `ssh-add` (pre-installed on macOS, Linux, WSL; install via [Git for Windows](https://gitforwindows.org/) on Windows)
-- **Git**: For git config integration and SSH testing
-- **Rust** *(only for `cargo install` or building from source)*: Install via [rustup.rs](https://rustup.rs/)
-
----
-
-## Copy SSH Public Key to Clipboard
-
-After generating your SSH key, use these commands to copy the public key to your clipboard:
-
-### macOS
-```bash
-pbcopy < ~/.ssh/your_key_name.pub
-```
-
-### Linux (X11)
-```bash
-xclip -selection clipboard < ~/.ssh/your_key_name.pub
-```
-or
-```bash
-xsel --clipboard < ~/.ssh/your_key_name.pub
-```
-
-### Linux (Wayland)
-```bash
-wl-copy < ~/.ssh/your_key_name.pub
-```
-
-### Windows (PowerShell)
-```powershell
-Get-Content ~/.ssh/your_key_name.pub | Set-Clipboard
-```
-
-### Windows (Git Bash / CMD)
-```bash
-clip < ~/.ssh/your_key_name.pub
-```
-
-### WSL
-```bash
-clip.exe < ~/.ssh/your_key_name.pub
-```
-
-> **Note:** The script automatically copies the key to your clipboard during setup. These commands are useful if you need to copy it again later.
-
 ## How It Works
 
 1. **Platform Detection**: Automatically detects your operating system (macOS, Linux, Windows, WSL)
@@ -251,13 +122,47 @@ clip.exe < ~/.ssh/your_key_name.pub
 - `~/.ssh/[keyname].pub` - Your public SSH key
 - `~/.ssh/config` - SSH configuration (updated)
 
+---
+
+## Legacy Shell Scripts
+
+If you prefer not to use the compiled Rust binary, we still maintain independent shell scripts (`ssh.sh` for Bash/Zsh, `ssh.ps1` for PowerShell) with identical functionality. They reside in the `scripts/` directory.
+
+### Quick Installation & Usage
+
+#### macOS / Linux / WSL / Git Bash
+
+```bash
+# One-liner (copy & paste into Terminal)
+curl -fsSLo ssh.sh https://raw.githubusercontent.com/vancityAyush/ssh_script/main/scripts/ssh.sh && bash ssh.sh
+```
+
+#### Windows (PowerShell)
+
+```powershell
+# One-liner (copy & paste into PowerShell)
+iwr -Uri https://raw.githubusercontent.com/vancityAyush/ssh_script/main/scripts/ssh.ps1 -OutFile ssh.ps1; .\ssh.ps1
+```
+
+### Clone Repository (All Platforms)
+
+```bash
+git clone https://github.com/vancityAyush/ssh_script.git
+cd ssh_script
+
+# Bash/Zsh
+chmod +x scripts/ssh.sh && ./scripts/ssh.sh
+
+# PowerShell
+./scripts/ssh.ps1
+```
+
+---
+
 ## Troubleshooting
 
 ### Permission Errors
 ```bash
-# Make sure script is executable
-chmod +x ssh.sh
-
 # Check SSH directory permissions
 ls -la ~/.ssh
 ```
@@ -288,19 +193,11 @@ ssh -T git@gitlab.com
 ssh -T git@ssh.dev.azure.com
 ```
 
-## Requirements
+## Prerequisites
 
-### Bash (`ssh.sh`)
-- Bash 4+ or Zsh
-- SSH client (usually pre-installed)
-- Git (for git config and SSH testing)
-- Internet connection (for downloading and testing)
-
-### PowerShell (`ssh.ps1`)
-- PowerShell 5.1 (Windows) or pwsh 7+ (cross-platform)
-- SSH client (`ssh-keygen`, `ssh-add`)
-- Git (for git config and SSH testing)
-- Internet connection (for downloading and testing)
+- **SSH client**: `ssh-keygen` and `ssh-add` (pre-installed on macOS, Linux, WSL; install via [Git for Windows](https://gitforwindows.org/) on Windows)
+- **Git**: For git config integration and SSH testing
+- **Rust** *(only for `cargo install` or building from source)*: Install via [rustup.rs](https://rustup.rs/)
 
 ## Changelog
 

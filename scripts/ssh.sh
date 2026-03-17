@@ -36,7 +36,7 @@ select_option() {
 
         # Handle escape sequences (arrow keys)
         if [ "$key" = $'\x1b' ]; then
-            read -rsn2 -t 0.1 key < /dev/tty
+            read -rsn2 -t 0.5 key < /dev/tty
             case "$key" in
                 '[A') # Up arrow
                     ((selected > 0)) && ((selected--))
