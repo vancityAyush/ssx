@@ -16,11 +16,15 @@ detect_os() {
         darwin*)
             echo "macos"
             ;;
-        cygwin|msys|win32)
+        cygwin*|msys*|win32*)
             echo "windows"
             ;;
         *)
-            echo "unknown"
+            if [ "${OS:-}" = "Windows_NT" ]; then
+                echo "windows"
+            else
+                echo "unknown"
+            fi
             ;;
     esac
 }
@@ -220,6 +224,8 @@ copy_to_clipboard() {
                 clip.exe < "$file" && success=true
             elif command -v clip &> /dev/null; then
                 clip < "$file" && success=true
+            elif command -v powershell.exe &> /dev/null; then
+                powershell.exe -NoProfile -Command "Set-Clipboard -Value (Get-Content -Raw -Path \"$file\")" && success=true
             fi
             ;;
     esac
@@ -277,6 +283,9 @@ open_settings_page() {
                 return 0
             elif command -v cmd.exe &> /dev/null; then
                 cmd.exe /c start "$settings_url" && echo "✓ Browser opened successfully!"
+                return 0
+            elif command -v powershell.exe &> /dev/null; then
+                powershell.exe -NoProfile -Command "Start-Process \"$settings_url\"" && echo "✓ Browser opened successfully!"
                 return 0
             fi
             ;;

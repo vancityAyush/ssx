@@ -1,6 +1,6 @@
 # SSH Script
 
-This cross-platform shell script automates the process of generating and configuring SSH keys for Bitbucket, GitHub, GitLab, or Azure DevOps. The script is compatible with macOS, Linux, Windows (Git Bash/WSL), and provides comprehensive error handling and validation.
+This cross-platform shell script automates the process of generating and configuring SSH keys for Bitbucket, GitHub, GitLab, or Azure DevOps. The script is compatible with macOS, Linux, Windows (Git Bash/PowerShell/WSL), and provides comprehensive error handling and validation.
 
 ## Features
 
@@ -19,7 +19,7 @@ This cross-platform shell script automates the process of generating and configu
 |----------|-----------|-----------|----------------|---------|
 | **macOS** | ✅ | `pbcopy` | `open` | ✅ |
 | **Linux** | ✅ | `xclip`, `xsel` | `xdg-open`, `sensible-browser` | ✅ |
-| **Windows** | ✅ | `clip.exe`, `clip` | `start`, `cmd.exe` | ✅ |
+| **Windows** | ✅ | `clip.exe`, `clip`, `powershell.exe Set-Clipboard` | `start`, `cmd.exe`, `powershell.exe Start-Process` | ✅ |
 | **WSL** | ✅ | `clip.exe`, `xclip` | `xdg-open` | ✅ |
 
 ## Quick Installation & Usage
