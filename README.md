@@ -32,62 +32,40 @@ This cross-platform script automates the process of generating and configuring S
 
 ```bash
 # One-liner (copy & paste into Terminal)
-curl -fsSL https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh | bash
-```
-
-or download first:
-```bash
-curl -O https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh
-chmod +x ssh.sh
-./ssh.sh
+curl -fsSLo ssh.sh https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh && bash ssh.sh
 ```
 
 ### Linux (Ubuntu / Debian / Fedora / Arch)
 
 ```bash
-# One-liner (copy & paste into Terminal)
-curl -fsSL https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh | bash
+# One-liner using curl
+curl -fsSLo ssh.sh https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh && bash ssh.sh
 ```
 
-or using `wget`:
 ```bash
-wget https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh
-chmod +x ssh.sh
-./ssh.sh
+# One-liner using wget
+wget -qO ssh.sh https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh && bash ssh.sh
 ```
 
 ### Windows (PowerShell)
 
 ```powershell
 # One-liner (copy & paste into PowerShell)
-irm https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.ps1 | iex
-```
-
-or download first:
-```powershell
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.ps1" -OutFile "ssh.ps1"
-./ssh.ps1
+iwr -Uri https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.ps1 -OutFile ssh.ps1; .\ssh.ps1
 ```
 
 ### Windows (Git Bash)
 
 ```bash
 # One-liner (copy & paste into Git Bash)
-curl -fsSL https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh | bash
-```
-
-or download first:
-```bash
-curl -O https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh
-chmod +x ssh.sh
-./ssh.sh
+curl -fsSLo ssh.sh https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh && bash ssh.sh
 ```
 
 ### WSL (Windows Subsystem for Linux)
 
 ```bash
 # One-liner (copy & paste into WSL terminal)
-curl -fsSL https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh | bash
+curl -fsSLo ssh.sh https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh && bash ssh.sh
 ```
 
 ### Clone Repository (All Platforms)

@@ -74,23 +74,14 @@ jobs:
 
         ## Quick Usage
 
-        ### Bash / Zsh
-        Run the script directly without downloading:
+        ### Bash / Zsh (macOS, Linux, WSL, Git Bash)
         ```bash
-        curl -sSL https://raw.githubusercontent.com/${{ github.repository }}/main/ssh.sh | bash
+        curl -fsSLo ssh.sh https://raw.githubusercontent.com/${{ github.repository }}/main/ssh.sh && bash ssh.sh
         ```
 
-        Or download and run locally:
-        ```bash
-        curl -O https://raw.githubusercontent.com/${{ github.repository }}/main/ssh.sh
-        chmod +x ssh.sh
-        ./ssh.sh
-        ```
-
-        ### PowerShell
+        ### PowerShell (Windows, Linux, macOS)
         ```powershell
-        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${{ github.repository }}/main/ssh.ps1" -OutFile "ssh.ps1"
-        ./ssh.ps1
+        iwr -Uri https://raw.githubusercontent.com/${{ github.repository }}/main/ssh.ps1 -OutFile ssh.ps1; .\ssh.ps1
         ```
 
         ## What's Included

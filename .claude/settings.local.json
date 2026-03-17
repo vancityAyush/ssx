@@ -5,7 +5,11 @@
       "Bash(ssh -vT git@ssh.dev.azure.com)",
       "Bash(git config:*)",
       "Bash(GIT_SSH_COMMAND=\"ssh -v\" git clone git@ssh.dev.azure.com:v3/kabuni/kabuni-mvp/kabuni-services /tmp/test-clone)",
-      "Bash(powershell.exe -c \"ls test_key*\")"
+      "Bash(powershell.exe -c \"ls test_key*\")",
+      "Bash(powershell.exe -c \"Get-Content test_key5 -TotalCount 2\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
