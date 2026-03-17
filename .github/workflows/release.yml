@@ -58,21 +58,23 @@ jobs:
       with:
         ref: ${{ steps.tag.outputs.name }}
 
-    - name: Prepare binary asset
+    - name: Prepare binary assets
       run: |
         chmod +x ssh.sh
         mkdir -p release
         cp ssh.sh release/ssh-key-generator.sh
+        cp ssh.ps1 release/ssh-key-generator.ps1
 
     - name: Generate release notes
       run: |
         cat > release_notes.md << 'EOF'
         # SSH Key Generator Script
 
-        This release contains the SSH key generation script that automates the process of creating and configuring SSH keys for Bitbucket, GitHub, GitLab, or Azure DevOps.
+        This release contains the SSH key generation scripts that automate the process of creating and configuring SSH keys for Bitbucket, GitHub, GitLab, or Azure DevOps.
 
         ## Quick Usage
 
+        ### Bash / Zsh
         Run the script directly without downloading:
         ```bash
         curl -sSL https://raw.githubusercontent.com/${{ github.repository }}/main/ssh.sh | bash
@@ -85,16 +87,23 @@ jobs:
         ./ssh.sh
         ```
 
+        ### PowerShell
+        ```powershell
+        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${{ github.repository }}/main/ssh.ps1" -OutFile "ssh.ps1"
+        ./ssh.ps1
+        ```
+
         ## What's Included
 
-        - **ssh-key-generator.sh**: The main script that helps you generate SSH keys for different platforms
+        - **ssh-key-generator.sh**: Bash script for macOS, Linux, WSL, Git Bash
+        - **ssh-key-generator.ps1**: PowerShell script for Windows, Linux, macOS
 
         ## Features
 
-        - Interactive menu to choose between Bitbucket, GitHub, GitLab, and Azure DevOps
-        - Automatic SSH key generation with appropriate algorithms for each platform
-          - GitHub / Bitbucket: Ed25519 keys
-          - GitLab / Azure DevOps: RSA-4096 keys
+        - Arrow-key interactive menu for provider selection
+        - Ed25519 key generation for all providers
+        - Optional git username and email configuration
+        - Automatic SSH key generation with appropriate algorithms
         - SSH agent configuration
         - SSH config file management
         - Public key clipboard copying (when supported)
@@ -126,7 +135,9 @@ jobs:
         tag_name: ${{ steps.tag.outputs.name }}
         files: |
           release/ssh-key-generator.sh
+          release/ssh-key-generator.ps1
           ssh.sh
+          ssh.ps1
         body_path: release_notes.md
         name: "SSH Key Generator ${{ steps.tag.outputs.name }}"
         draft: false
