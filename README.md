@@ -1,6 +1,6 @@
 # SSH Script
 
-This cross-platform shell script automates the process of generating and configuring SSH keys for Bitbucket, GitHub, or GitLab. The script is compatible with macOS, Linux, Windows (Git Bash/WSL), and provides comprehensive error handling and validation.
+This cross-platform shell script automates the process of generating and configuring SSH keys for Bitbucket, GitHub, GitLab, or Azure DevOps. The script is compatible with macOS, Linux, Windows (Git Bash/WSL), and provides comprehensive error handling and validation.
 
 ## Features
 
@@ -11,7 +11,7 @@ This cross-platform shell script automates the process of generating and configu
 - ✅ **SSH agent management**: Properly handles SSH agent across different platforms
 - ✅ **Error handling**: Comprehensive error checking and user-friendly messages
 - ✅ **SSH connection testing**: Built-in SSH key testing functionality
-- ✅ **Modern key types**: Uses Ed25519 keys (GitHub/Bitbucket) and RSA-4096 (GitLab)
+- ✅ **Modern key types**: Uses Ed25519 keys (GitHub/Bitbucket) and RSA-4096 (GitLab/Azure DevOps)
 
 ## Platform Support
 
@@ -47,11 +47,11 @@ chmod +x ssh.sh
 ## How It Works
 
 1. **Platform Detection**: Automatically detects your operating system (macOS, Linux, Windows, WSL)
-2. **Provider Selection**: Choose between Bitbucket, GitHub, or GitLab
+2. **Provider Selection**: Choose between Bitbucket, GitHub, GitLab, or Azure DevOps
 3. **Input Validation**: Validates email format and key naming
 4. **Key Generation**: 
    - GitHub/Bitbucket: Ed25519 keys (modern, secure, fast)
-   - GitLab: RSA-4096 keys (maximum compatibility)
+   - GitLab/Azure DevOps: RSA-4096 keys (maximum compatibility)
 5. **SSH Agent Setup**: Automatically starts SSH agent and adds your key
 6. **Config Management**: Updates SSH config with host-specific settings
 7. **Clipboard Integration**: Copies public key to clipboard automatically
@@ -90,6 +90,7 @@ ssh-add -l
 ssh -T git@github.com
 ssh -T git@bitbucket.org  
 ssh -T git@gitlab.com
+ssh -T git@ssh.dev.azure.com
 ```
 
 ## Requirements
@@ -100,6 +101,14 @@ ssh -T git@gitlab.com
 - Internet connection (for downloading and testing)
 
 ## Changelog
+
+### v2.1.0 - Azure DevOps Support
+
+**🚀 New Features:**
+- ✅ **Azure DevOps support**: Added SSH key generation for Azure Repos (option 4)
+- ✅ **RSA-4096 for Azure DevOps**: Uses RSA-4096 keys as required by Azure DevOps (minimum 2048-bit)
+- ✅ **Azure DevOps hostname**: Automatically configures `ssh.dev.azure.com` as the SSH host
+- ✅ **Azure DevOps settings page**: Opens `https://dev.azure.com/_usersSettings/keys` for easy key addition
 
 ### v2.0.0 - Cross-Platform Compatibility Update
 

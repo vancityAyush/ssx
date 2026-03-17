@@ -36,14 +36,15 @@ while true; do
     echo "1. Bitbucket"
     echo "2. Github"
     echo "3. GitLab"
-    read -r -p "Enter your choice (1-3): " option
+    echo "4. Azure DevOps"
+    read -r -p "Enter your choice (1-4): " option
     
     case "$option" in
-        1|2|3)
+        1|2|3|4)
             break
             ;;
         *)
-            echo "Error: Please enter a valid option (1, 2, or 3)"
+            echo "Error: Please enter a valid option (1, 2, 3, or 4)"
             ;;
     esac
 done
@@ -92,6 +93,9 @@ elif [ "$option" = "2" ]; then
 elif [ "$option" = "3" ]; then
     # GitLab - use RSA with 4096 bits for compatibility
     ssh-keygen -t rsa -b 4096 -C "$email" -f "$keyName" -N ""
+elif [ "$option" = "4" ]; then
+    # Azure DevOps - use RSA with 4096 bits (minimum 2048 required)
+    ssh-keygen -t rsa -b 4096 -C "$email" -f "$keyName" -N ""
 fi
 
 # Verify key was created successfully
@@ -134,6 +138,7 @@ getDefaultHostName() {
         "1") echo "bitbucket.org" ;;
         "2") echo "github.com" ;;
         "3") echo "gitlab.com" ;;
+        "4") echo "ssh.dev.azure.com" ;;
         *) echo "unknown" ;;
     esac
 }
@@ -244,6 +249,7 @@ open_settings_page() {
         "1") settings_url="https://bitbucket.org/account/settings/ssh-keys/" ;;
         "2") settings_url="https://github.com/settings/keys" ;;
         "3") settings_url="https://gitlab.com/-/profile/keys" ;;
+        "4") settings_url="https://dev.azure.com/_usersSettings/keys" ;;
         *) echo "Error: Invalid option for opening settings page"; return 1 ;;
     esac
     
