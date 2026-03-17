@@ -1,0 +1,89 @@
+name: Create Release with Binary and Notes
+
+on:
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [created]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Prepare binary asset
+      run: |
+        # Make the script executable
+        chmod +x ssh.sh
+        
+        # Create a release directory
+        mkdir -p release
+        
+        # Copy the script to release directory with a more descriptive name
+        cp ssh.sh release/ssh-key-generator.sh
+    
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        cat > release_notes.md << 'EOF'
+        # SSH Key Generator Script
+        
+        This release contains the SSH key generation script that automates the process of creating and configuring SSH keys for Bitbucket, GitHub, or GitLab.
+        
+        ## Quick Usage
+        
+        Run the script directly without downloading:
+        ```bash
+        curl -sSL https://raw.githubusercontent.com/${{ github.repository }}/main/ssh.sh | bash
+        ```
+        
+        Or download and run locally:
+        ```bash
+        curl -O https://raw.githubusercontent.com/${{ github.repository }}/main/ssh.sh
+        chmod +x ssh.sh
+        ./ssh.sh
+        ```
+        
+        ## What's Included
+        
+        - **ssh-key-generator.sh**: The main script that helps you generate SSH keys for different platforms
+        
+        ## Features
+        
+        - Interactive menu to choose between Bitbucket, GitHub, and GitLab
+        - Automatic SSH key generation with appropriate algorithms for each platform
+        - SSH agent configuration
+        - SSH config file management
+        - Public key clipboard copying (when supported)
+        - Direct browser opening to platform SSH settings pages
+        - SSH connection testing
+        
+        ## Requirements
+        
+        - Bash shell
+        - SSH client utilities
+        - Internet connection for key testing
+        EOF
+        
+        echo "Generated release notes:"
+        cat release_notes.md
+    
+    - name: Upload Release Assets
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          release/ssh-key-generator.sh
+          ssh.sh
+        body_path: release_notes.md
+        name: "SSH Key Generator ${{ github.ref_name }}"
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
