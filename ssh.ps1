@@ -115,7 +115,7 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
     $detectedEmail = & git config --global user.email 2>$null
     $detectedUsername = & git config --global user.name 2>$null
 
-    $remoteUrl = & git remote get-url origin 2>$null
+    try { $remoteUrl = & git remote get-url origin 2>$null } catch { $remoteUrl = $null }
     if ($remoteUrl) {
         if ($remoteUrl -match 'bitbucket\.org')              { $detectedProvider = 0 }
         elseif ($remoteUrl -match 'github\.com')              { $detectedProvider = 1 }
