@@ -28,40 +28,120 @@ This cross-platform script automates the process of generating and configuring S
 
 ## Quick Installation & Usage
 
-### Bash / Zsh (macOS, Linux, WSL, Git Bash)
+### macOS
 
-#### Option 1: Direct Download and Run
+```bash
+# One-liner (copy & paste into Terminal)
+curl -fsSL https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh | bash
+```
+
+or download first:
 ```bash
 curl -O https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh
 chmod +x ssh.sh
 ./ssh.sh
 ```
 
-#### Option 2: One-liner Download and Execute
+### Linux (Ubuntu / Debian / Fedora / Arch)
+
 ```bash
+# One-liner (copy & paste into Terminal)
 curl -fsSL https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh | bash
 ```
 
-#### Option 3: Clone Repository
+or using `wget`:
 ```bash
-git clone https://github.com/vancityAyush/ssh_script.git
-cd ssh_script
+wget https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh
 chmod +x ssh.sh
 ./ssh.sh
 ```
 
-### PowerShell (Windows, Linux, macOS)
+### Windows (PowerShell)
 
-#### Option 1: Download and Run
+```powershell
+# One-liner (copy & paste into PowerShell)
+irm https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.ps1 | iex
+```
+
+or download first:
 ```powershell
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.ps1" -OutFile "ssh.ps1"
 ./ssh.ps1
 ```
 
-#### Option 2: One-liner
-```powershell
-irm https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.ps1 | iex
+### Windows (Git Bash)
+
+```bash
+# One-liner (copy & paste into Git Bash)
+curl -fsSL https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh | bash
 ```
+
+or download first:
+```bash
+curl -O https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh
+chmod +x ssh.sh
+./ssh.sh
+```
+
+### WSL (Windows Subsystem for Linux)
+
+```bash
+# One-liner (copy & paste into WSL terminal)
+curl -fsSL https://raw.githubusercontent.com/vancityAyush/ssh_script/main/ssh.sh | bash
+```
+
+### Clone Repository (All Platforms)
+
+```bash
+git clone https://github.com/vancityAyush/ssh_script.git
+cd ssh_script
+
+# Bash/Zsh
+chmod +x ssh.sh && ./ssh.sh
+
+# PowerShell
+./ssh.ps1
+```
+
+## Copy SSH Public Key to Clipboard
+
+After generating your SSH key, use these commands to copy the public key to your clipboard:
+
+### macOS
+```bash
+pbcopy < ~/.ssh/your_key_name.pub
+```
+
+### Linux (X11)
+```bash
+xclip -selection clipboard < ~/.ssh/your_key_name.pub
+```
+or
+```bash
+xsel --clipboard < ~/.ssh/your_key_name.pub
+```
+
+### Linux (Wayland)
+```bash
+wl-copy < ~/.ssh/your_key_name.pub
+```
+
+### Windows (PowerShell)
+```powershell
+Get-Content ~/.ssh/your_key_name.pub | Set-Clipboard
+```
+
+### Windows (Git Bash / CMD)
+```bash
+clip < ~/.ssh/your_key_name.pub
+```
+
+### WSL
+```bash
+clip.exe < ~/.ssh/your_key_name.pub
+```
+
+> **Note:** The script automatically copies the key to your clipboard during setup. These commands are useful if you need to copy it again later.
 
 ## How It Works
 
