@@ -21,11 +21,33 @@ Cross-platform SSH key manager for Git providers (Bitbucket, GitHub, GitLab, Azu
 
 `sshx` provides a hybrid interface: fully interactive when run with no arguments, or fully scriptable via subcommands and flags.
 
+### One-Line via npm
+
+```bash
+# Interactive setup
+npx @vancityayush/sshx
+
+# Non-interactive setup
+npx @vancityayush/sshx setup github -e you@example.com -k personal
+```
+
+The npm package is implemented in TypeScript, built with Bun, and published to npm. It downloads the matching `sshx` release binary for the current machine and then runs it.
+
 ### Install via Script (macOS / Linux / WSL / Git Bash)
 
 ```bash
-# One-liner — detects your platform and installs the latest release
-curl -fsSL https://raw.githubusercontent.com/vancityAyush/ssh_script/main/install.sh | sh
+# Installs the latest release locally and launches sshx immediately
+curl -fsSL https://raw.githubusercontent.com/vancityAyush/sshx/main/install.sh | sh
+
+# Pass sshx flags through the installer
+curl -fsSL https://raw.githubusercontent.com/vancityAyush/sshx/main/install.sh | sh -s -- setup github -e you@example.com -k personal
+```
+
+### Install via Script (PowerShell)
+
+```powershell
+# Installs the latest release locally and launches sshx immediately
+irm https://raw.githubusercontent.com/vancityAyush/sshx/main/install.ps1 | iex
 ```
 
 ### Install via Cargo (All Platforms)
@@ -36,32 +58,11 @@ Requires [Rust](https://rustup.rs/) to be installed.
 cargo install sshx
 ```
 
-### Install on Windows (PowerShell)
-
-```powershell
-# Download the latest Windows binary from GitHub Releases
-$release = Invoke-RestMethod "https://api.github.com/repos/vancityAyush/ssh_script/releases" |
-    Where-Object { $_.tag_name -like "sshx-v*" } | Select-Object -First 1
-$url = ($release.assets | Where-Object { $_.name -like "*windows*" }).browser_download_url
-Invoke-WebRequest -Uri $url -OutFile "$env:LOCALAPPDATA\sshx.exe"
-
-# Add to PATH (if not already there)
-$path = [Environment]::GetEnvironmentVariable("PATH", "User")
-if ($path -notlike "*$env:LOCALAPPDATA*") {
-    [Environment]::SetEnvironmentVariable("PATH", "$path;$env:LOCALAPPDATA", "User")
-}
-```
-
-Or install via Cargo:
-```powershell
-cargo install sshx
-```
-
 ### Build from Source (All Platforms)
 
 ```bash
-git clone https://github.com/vancityAyush/ssh_script.git
-cd ssh_script
+git clone https://github.com/vancityAyush/sshx.git
+cd sshx
 cargo build --release
 
 # The binary is at target/release/sshx (or sshx.exe on Windows)
@@ -134,21 +135,21 @@ If you prefer not to use the compiled Rust binary, we still maintain independent
 
 ```bash
 # One-liner (copy & paste into Terminal)
-curl -fsSLo ssh.sh https://raw.githubusercontent.com/vancityAyush/ssh_script/main/scripts/ssh.sh && bash ssh.sh
+curl -fsSLo ssh.sh https://raw.githubusercontent.com/vancityAyush/sshx/main/scripts/ssh.sh && bash ssh.sh
 ```
 
 #### Windows (PowerShell)
 
 ```powershell
 # One-liner (copy & paste into PowerShell)
-iwr -Uri https://raw.githubusercontent.com/vancityAyush/ssh_script/main/scripts/ssh.ps1 -OutFile ssh.ps1; .\ssh.ps1
+iwr -Uri https://raw.githubusercontent.com/vancityAyush/sshx/main/scripts/ssh.ps1 -OutFile ssh.ps1; .\ssh.ps1
 ```
 
 ### Clone Repository (All Platforms)
 
 ```bash
-git clone https://github.com/vancityAyush/ssh_script.git
-cd ssh_script
+git clone https://github.com/vancityAyush/sshx.git
+cd sshx
 
 # Bash/Zsh
 chmod +x scripts/ssh.sh && ./scripts/ssh.sh

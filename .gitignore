@@ -1,1 +1,4 @@
 target/
+npm/dist/
+npm/node_modules/
+npm/bun.lockb
