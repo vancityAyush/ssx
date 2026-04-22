@@ -4,20 +4,29 @@
   "strategy": "manual-commit",
   "branch": "main",
   "checkpoints_count": 1,
-  "files_touched": null,
+  "files_touched": [
+    ".github/workflows/release.yml",
+    "package.json"
+  ],
   "sessions": [
     {
       "metadata": "/0e/1d9030468a/0/metadata.json",
       "transcript": "/0e/1d9030468a/0/full.jsonl",
       "content_hash": "/0e/1d9030468a/0/content_hash.txt",
       "prompt": "/0e/1d9030468a/0/prompt.txt"
+    },
+    {
+      "metadata": "/0e/1d9030468a/1/metadata.json",
+      "transcript": "/0e/1d9030468a/1/full.jsonl",
+      "content_hash": "/0e/1d9030468a/1/content_hash.txt",
+      "prompt": "/0e/1d9030468a/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 8536450,
-    "cache_creation_tokens": 0,
-    "cache_read_tokens": 7958656,
-    "output_tokens": 77164,
-    "api_call_count": 68
+    "input_tokens": 8536518,
+    "cache_creation_tokens": 24125,
+    "cache_read_tokens": 8360968,
+    "output_tokens": 84247,
+    "api_call_count": 83
   }
 }
