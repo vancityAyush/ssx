@@ -1,0 +1,50 @@
+{
+  "cli_version": "0.5.5",
+  "checkpoint_id": "6fbde99c49bd",
+  "session_id": "750b6c73-8854-49f3-9dc9-6b7349f04dcb",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-22T15:00:33.568111Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [],
+  "agent": "Claude Code",
+  "model": "claude-sonnet-4-6",
+  "turn_id": "f5593593c2e8",
+  "checkpoint_transcript_start": 503,
+  "transcript_lines_at_start": 503,
+  "token_usage": {
+    "input_tokens": 49,
+    "cache_creation_tokens": 21593,
+    "cache_read_tokens": 2511983,
+    "output_tokens": 9355,
+    "api_call_count": 43
+  },
+  "session_metrics": {
+    "turn_count": 5
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 483,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".codex/agents/entire-search.toml": 23,
+        ".codex/config.toml": 3,
+        ".codex/hooks.json": 40,
+        ".gemini/settings.json": 5,
+        ".github/hooks/entire.json": 3,
+        "AGENTS.md": 46,
+        "skills/opensrc/SKILL.md": 89,
+        "skills/opensrc/agents/openai.yaml": 7,
+        "skills/sshx-manual-qa/SKILL.md": 85,
+        "skills/sshx-manual-qa/agents/openai.yaml": 4,
+        "skills/sshx-release-notes/SKILL.md": 85,
+        "skills/sshx-release-notes/agents/openai.yaml": 4,
+        "skills/sshx-troubleshoot/SKILL.md": 85,
+        "skills/sshx-troubleshoot/agents/openai.yaml": 4
+      }
+    }
+  ]
+}
