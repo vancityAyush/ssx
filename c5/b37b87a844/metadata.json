@@ -1,0 +1,63 @@
+{
+  "cli_version": "0.5.5",
+  "checkpoint_id": "c5b37b87a844",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".github/workflows/sshx-release.yml",
+    "CLAUDE.md",
+    "Cargo.lock",
+    "Cargo.toml",
+    "README.md",
+    "docs/superpowers/specs/2026-03-17-sshx-rust-cli-design.md",
+    "npm/README.md",
+    "npm/bin/sshx",
+    "npm/bun.lock",
+    "npm/bunfig.toml",
+    "npm/package.json",
+    "npm/src/cli.ts",
+    "npm/tsconfig.json",
+    "package.json",
+    "src/cli.rs",
+    "src/cli.ts",
+    "src/commands/agent.rs",
+    "src/commands/completions.rs",
+    "src/commands/config.rs",
+    "src/commands/copy.rs",
+    "src/commands/init.rs",
+    "src/commands/list.rs",
+    "src/commands/mod.rs",
+    "src/commands/remove.rs",
+    "src/commands/setup.rs",
+    "src/commands/test.rs",
+    "src/main.rs",
+    "src/platform/browser.rs",
+    "src/platform/clipboard.rs",
+    "src/platform/detect.rs",
+    "src/platform/mod.rs",
+    "src/prompt.rs",
+    "src/providers.rs",
+    "src/ssh/agent.rs",
+    "src/ssh/config.rs",
+    "src/ssh/connection.rs",
+    "src/ssh/keygen.rs",
+    "src/ssh/mod.rs",
+    "src/ui.rs"
+  ],
+  "sessions": [
+    {
+      "metadata": "/c5/b37b87a844/0/metadata.json",
+      "transcript": "/c5/b37b87a844/0/full.jsonl",
+      "content_hash": "/c5/b37b87a844/0/content_hash.txt",
+      "prompt": "/c5/b37b87a844/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 6753500,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 6619904,
+    "output_tokens": 46984,
+    "api_call_count": 59
+  }
+}
