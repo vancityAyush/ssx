@@ -3,7 +3,7 @@
   "checkpoint_id": "c5b37b87a844",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
     ".github/workflows/sshx-release.yml",
     "CLAUDE.md",
@@ -51,13 +51,19 @@
       "transcript": "/c5/b37b87a844/0/full.jsonl",
       "content_hash": "/c5/b37b87a844/0/content_hash.txt",
       "prompt": "/c5/b37b87a844/0/prompt.txt"
+    },
+    {
+      "metadata": "/c5/b37b87a844/1/metadata.json",
+      "transcript": "/c5/b37b87a844/1/full.jsonl",
+      "content_hash": "/c5/b37b87a844/1/content_hash.txt",
+      "prompt": "/c5/b37b87a844/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 6753500,
+    "input_tokens": 6937839,
     "cache_creation_tokens": 0,
-    "cache_read_tokens": 6619904,
-    "output_tokens": 46984,
-    "api_call_count": 59
+    "cache_read_tokens": 6760960,
+    "output_tokens": 48512,
+    "api_call_count": 63
   }
 }
