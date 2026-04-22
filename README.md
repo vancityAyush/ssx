@@ -61,6 +61,65 @@ sshx
 sshx --tui
 ```
 
+Launches a full-screen terminal UI. Navigate with arrow keys; no mouse required.
+
+#### Main Menu
+
+| Key | Action |
+|-----|--------|
+| `↑` / `↓` | Move selection |
+| `Enter` | Open screen |
+| `q` / `Esc` | Quit |
+
+Options: **Setup**, **Key List**, **Test Connection**, **Agent**
+
+#### Setup Wizard (4 steps)
+
+1. **Provider** — pick GitHub, GitLab, Bitbucket, or Azure DevOps
+2. **Email** — pre-filled from `git config user.email`
+3. **Key name** — pre-filled as `id_ed25519_<provider>`
+4. **Generate** — runs `ssh-keygen`, writes `~/.ssh/config`, copies pubkey, opens browser
+
+| Key | Action |
+|-----|--------|
+| `↑` / `↓` | Move selection (step 1) |
+| `Enter` | Confirm / advance |
+| `Esc` | Back to main menu |
+
+#### Key List
+
+Shows all `# sshx`-managed SSH keys.
+
+| Key | Action |
+|-----|--------|
+| `↑` / `↓` | Move selection |
+| `Enter` | Copy public key to clipboard |
+| `d` | Remove key (with confirmation dialog) |
+| `Esc` | Back |
+
+#### Test Connection
+
+Select a provider → runs `ssh -T` and shows output.
+
+| Key | Action |
+|-----|--------|
+| `↑` / `↓` | Move selection |
+| `Enter` | Run test |
+| `r` | Test another provider |
+| `Esc` | Back |
+
+#### Agent
+
+Shows keys loaded in `ssh-agent`.
+
+| Key | Action |
+|-----|--------|
+| `↑` / `↓` | Move selection |
+| `a` | Add a managed key to the agent |
+| `d` | Remove selected key from the agent |
+| `r` | Refresh list |
+| `Esc` | Back |
+
 ### Headless Commands
 
 ```bash
