@@ -1,16 +1,35 @@
 # sshx
 
-`sshx` is a TypeScript-first CLI for generating and configuring SSH keys for GitHub, GitLab, Bitbucket, and Azure DevOps. The main implementation now lives in TypeScript, while the shell scripts remain available as fallbacks.
+`sshx` is a TUI-first Bun CLI for managing SSH keys for GitHub, GitLab, Bitbucket, and Azure DevOps. It runs as a full-screen interactive terminal app when invoked with no arguments, and it also supports headless commands for scripting and CI.
 
-## Features
+## What It Does
 
-- Interactive provider selection when you run `sshx` with no arguments
-- Scriptable setup with `sshx setup github -e you@example.com -k personal`
-- SSH key generation, SSH config updates, clipboard copy, browser opening, and connection testing
-- Optional per-host git identity setup for different SSH remotes
-- Cross-platform support for macOS, Linux, Windows, and WSL
+- Launches a keyboard-first setup wizard for SSH keys
+- Generates Ed25519 keys for GitHub, GitLab, and Bitbucket
+- Generates RSA keys for Azure DevOps
+- Writes managed `~/.ssh/config` blocks marked with `# sshx`
+- Adds keys to `ssh-agent`
+- Optionally writes per-key Git includes for host-specific identity config
+- Copies public keys to the clipboard when available
+- Opens the provider SSH settings page when available
+- Lists, copies, removes, and connection-tests managed keys
+
+## Runtime
+
+`sshx` now targets the Bun runtime. The published package includes a Node-based launcher in `bin/sshx`, but the actual CLI process is executed with `bun`, so Bun `>= 1.3` must be installed on the machine.
 
 ## Install
+
+### Bun
+
+```bash
+# One-off execution
+bunx @vancityayush/sshx --help
+
+# Global install
+bun add -g @vancityayush/sshx
+sshx
+```
 
 ### npm
 
@@ -19,76 +38,98 @@ npm install -g @vancityayush/sshx
 sshx
 ```
 
-### npx
+`npm` installation is supported, but `bun` still needs to be available on `PATH` at runtime because the launcher delegates to Bun.
 
-```bash
-npx @vancityayush/sshx
-npx @vancityayush/sshx setup github -e you@example.com -k personal
-```
-
-### Install Script
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/vancityAyush/sshx/main/install.sh | sh
-```
-
-```powershell
-irm https://raw.githubusercontent.com/vancityAyush/sshx/main/install.ps1 | iex
-```
-
-### Build From Source
+### Repo Install
 
 ```bash
 git clone https://github.com/vancityAyush/sshx.git
 cd sshx
 bun install
 bun run build
-node dist/cli.js
+bun dist/cli.js --help
 ```
 
 ## Usage
 
+### Interactive TUI
+
 ```bash
-# Interactive setup
 sshx
+sshx --tui
+```
 
-# Non-interactive setup
+### Headless Commands
+
+```bash
 sshx setup github -e you@example.com -k personal
-
-# Test a host
-sshx test github.com
-
-# Show configured SSH hosts
 sshx list
-
-# Copy a public key again
 sshx copy personal
-
-# Remove a key and matching SSH config entries
 sshx remove personal
-
-# Print SSH config or one host block
-sshx config
-sshx config github.com
-
-# Manage the SSH agent
+sshx test github
 sshx agent list
 sshx agent add personal
 sshx agent remove personal
 ```
 
-## What It Creates
+### Setup Flags
 
-- `~/.ssh/<keyname>`
-- `~/.ssh/<keyname>.pub`
-- `~/.ssh/config`
-- `~/.ssh/.gitconfig-<keyname>` when you enable per-host git identity
+```text
+-e, --email <email>     Email for the SSH key comment
+-k, --key <name>        Key file name
+-H, --host <host>       Custom SSH host alias
+--force                 Overwrite an existing key and host block
+--no-git-config         Skip per-host git config setup
+--no-browser            Skip opening the provider settings page
+--no-clipboard          Skip copying the public key to the clipboard
+```
 
-## Legacy Scripts
+## Managed SSH Config
 
-If you want the original script-based flow directly, the repository still includes:
+`sshx` only treats SSH config entries as its own when they are marked with `# sshx`. Generated blocks look like this:
 
-- `./ssh.sh`
-- `pwsh ./ssh.ps1`
+```sshconfig
+# sshx
+Host github.com
+  HostName github.com
+  User git
+  AddKeysToAgent yes
+  IdentityFile ~/.ssh/id_ed25519_github
+  IdentitiesOnly yes
+```
 
-Those remain useful fallbacks, but the main CLI implementation now lives in [src/cli.ts](/Users/vancityayush/Development/ssh_script/src/cli.ts).
+Removal and listing operations only target these managed entries.
+
+## Build And Verify
+
+```bash
+bun install
+bun run typecheck
+bun test
+bun run build
+bun dist/cli.js --help
+```
+
+## Release
+
+Push a tag like `sshx-v0.4.0` to trigger [.github/workflows/release.yml](.github/workflows/release.yml).
+
+That workflow:
+
+- verifies the tag matches `package.json`
+- runs `bun install`
+- runs `bun run typecheck`
+- runs `bun test`
+- runs `bun run build`
+- creates an npm tarball with `npm pack`
+- publishes a GitHub Release with the tarball plus install scripts
+- publishes the root package to npm using `NPM_TOKEN`
+
+## Legacy Shell Scripts
+
+The repo still includes shell-script fallbacks:
+
+- `scripts/ssh.sh`
+- `scripts/ssh.ps1`
+
+Those are separate from the Bun/TUI CLI and remain available if you want a script-only flow.

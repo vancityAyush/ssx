@@ -10,7 +10,10 @@ usage() {
     cat <<'EOF'
 Usage: install.sh [options] [-- sshx-args...]
 
-Installs the TypeScript sshx CLI with npm and launches it immediately by default.
+Installs the TUI sshx CLI with npm and launches it immediately by default.
+
+Prerequisite:
+  Bun 1.3+ must already be installed and available on PATH.
 
 Options:
   --prefix DIR   Install under DIR (default: ~/.local)
@@ -81,6 +84,7 @@ main() {
     done
 
     command_exists npm || fail "npm is required for install.sh"
+    command_exists bun || fail "bun is required for the TUI build of sshx. Install it from https://bun.sh"
 
     package_spec="$(resolve_package_spec)"
     bin_dir="${INSTALL_PREFIX}/bin"

@@ -27,6 +27,10 @@ if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
     throw "npm is required for install.ps1"
 }
 
+if (-not (Get-Command bun -ErrorAction SilentlyContinue)) {
+    throw "bun is required for the TUI build of sshx. Install it from https://bun.sh"
+}
+
 $PackageSpec = if ($Tag) {
     $Version = $Tag -replace '^sshx-v', ''
     "$PackageName@$Version"

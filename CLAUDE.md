@@ -4,19 +4,21 @@ This file provides guidance for AI assistants working with code in this reposito
 
 ## Project Overview
 
-`sshx` is a cross-platform Rust CLI that automates SSH key generation and configuration for Git providers (GitHub, Bitbucket, GitLab, Azure DevOps).
+`sshx` is a cross-platform TypeScript CLI that automates SSH key generation and configuration for Git providers (GitHub, Bitbucket, GitLab, Azure DevOps).
 
-The repository also contains legacy shell scripts (`scripts/ssh.sh` and `scripts/ssh.ps1`) with feature parity, maintained as fallbacks.
+The main app is now a TUI-first Bun CLI with headless subcommands layered over the same command modules.
+
+The repository also contains shell script fallbacks (`scripts/ssh.sh` and `scripts/ssh.ps1`).
 
 ## Commands
 
-### Rust CLI (`sshx`)
-- **Build:** `cargo build`
-- **Run (Interactive):** `cargo run`
-- **Run (Flags):** `cargo run -- setup github -e user@example.com -k mykey`
-- **Lint:** `cargo clippy`
-- **Format:** `cargo fmt`
-- **Release:** Push a tag like `sshx-v*` to trigger `.github/workflows/sshx-release.yml`
+### TypeScript CLI (`sshx`)
+- **Build:** `bun run build`
+- **Type-check:** `bun run typecheck`
+- **Test:** `bun test`
+- **Run (Interactive):** `bun dist/cli.js`
+- **Run (Flags):** `bun dist/cli.js setup github -e user@example.com -k mykey`
+- **Release:** Push a tag like `sshx-v*` to trigger `.github/workflows/release.yml`
 
 ### Legacy Shell Scripts (`scripts/`)
 - **Run (bash):** `./scripts/ssh.sh`
@@ -26,22 +28,16 @@ The repository also contains legacy shell scripts (`scripts/ssh.sh` and `scripts
 
 ## Architecture (`sshx`)
 
-The Rust CLI is organized into the following modules in `src/`:
+The entrypoint lives in **`src/cli.ts`** and routes between:
 
-1. **`main.rs` & `cli.rs`** — Entry point, CLI argument parsing (using `clap`), and subcommand routing.
-2. **`ui.rs`** — Interactive TUI components using `dialoguer` and `console`.
-3. **`prompt.rs`** — High-level interactive flows and input validation.
-4. **`providers.rs`** — Git provider definitions (URLs, settings pages).
-5. **`ssh/` module** — Core SSH operations:
-   - `keygen.rs` — Key generation (`ssh-keygen` execution).
-   - `config.rs` — SSH config file parsing and writing.
-   - `test.rs` — SSH connection testing.
-6. **`platform/` module** — OS-specific implementations:
-   - `clipboard.rs` — Cross-platform clipboard operations.
-   - `agent.rs` — SSH agent management.
-   - `browser.rs` — Opening default browser.
+- headless commands in `src/commands/`
+- provider metadata in `src/providers.ts`
+- SSH config/key helpers in `src/ssh/`
+- platform helpers in `src/platform.ts`
+- TUI screens in `src/tui/`
 
 Key design patterns:
-- Uses standard library `Command` to shell out to `ssh-keygen`, `ssh-add`, and OS utilities (`xclip`, `pbcopy`, etc.).
-- Errors are propogated and cleanly displayed to the user.
-- Partial artifacts (e.g. keys without config) are cleaned up during failure using manual rollback paths.
+- Uses Node child process APIs to shell out to `ssh-keygen`, `ssh-add`, and OS utilities (`xclip`, `pbcopy`, etc.).
+- Managed SSH config blocks are marked with `# sshx` so list/remove operations do not touch unrelated user config.
+- Errors are propagated and cleanly displayed to the user.
+- Partial artifacts (e.g. keys without config) are cleaned up during failure using rollback paths.
