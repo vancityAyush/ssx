@@ -35,14 +35,13 @@
     "ssh", "git", "github", "gitlab", "bitbucket", "azure-devops", "cli", "typescript"
   ],
   "dependencies": {
-    "@vancityayush/tui": "*",
+    "@vancityayush/tui": "^0.1.1",
     "react": "^19.2.0"
   },
   "devDependencies": {
     "@types/bun": "^1.3.12",
-    "@types/react": "^19.2.2",
     "@types/node": "^24.0.0",
-    "@types/react": "^19.2.0",
+    "@types/react": "^19.2.2",
     "typescript": "^5.9.3"
   }
 }
