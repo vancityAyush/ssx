@@ -16,7 +16,7 @@
     "sshx": "bin/sshx"
   },
   "scripts": {
-    "build": "bun build ./src/cli.ts --target=node --format=cjs --outfile ./dist/cli.js",
+    "build": "bun build ./src/cli.ts --target=node --format=cjs --outfile ./dist/cli.js && node ./scripts/normalize-bun-cjs.cjs ./dist/cli.js",
     "typecheck": "bunx tsc --noEmit --project tsconfig.json",
     "test": "bun test"
   },
@@ -28,18 +28,19 @@
     "scripts/ssh.ps1"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=18",
+    "bun": ">=1.3.0"
   },
   "keywords": [
     "ssh", "git", "github", "gitlab", "bitbucket", "azure-devops", "cli", "typescript"
   ],
   "dependencies": {
     "@vancityayush/tui": "*",
-    "react": "^18"
+    "react": "^19.2.0"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
-    "@types/react": "^18",
+    "@types/react": "^19.2.0",
     "typescript": "^5.9.3"
   }
 }

@@ -2,6 +2,8 @@
 
 `sshx` is a TypeScript-first CLI for generating and configuring SSH keys for GitHub, GitLab, Bitbucket, and Azure DevOps. The main implementation now lives in TypeScript, while the shell scripts remain available as fallbacks.
 
+Current TUI rebuild uses `@vancityayush/tui`, so Bun is required at runtime.
+
 ## Features
 
 - Interactive provider selection when you run `sshx` with no arguments
@@ -43,7 +45,7 @@ git clone https://github.com/vancityAyush/sshx.git
 cd sshx
 bun install
 bun run build
-node dist/cli.js
+bun dist/cli.js
 ```
 
 ## Usage
@@ -55,8 +57,8 @@ sshx
 # Non-interactive setup
 sshx setup github -e you@example.com -k personal
 
-# Test a host
-sshx test github.com
+# Test a provider
+sshx test github
 
 # Show configured SSH hosts
 sshx list
@@ -66,10 +68,6 @@ sshx copy personal
 
 # Remove a key and matching SSH config entries
 sshx remove personal
-
-# Print SSH config or one host block
-sshx config
-sshx config github.com
 
 # Manage the SSH agent
 sshx agent list
@@ -88,7 +86,7 @@ sshx agent remove personal
 
 If you want the original script-based flow directly, the repository still includes:
 
-- `./ssh.sh`
-- `pwsh ./ssh.ps1`
+- `./scripts/ssh.sh`
+- `pwsh ./scripts/ssh.ps1`
 
 Those remain useful fallbacks, but the main CLI implementation now lives in [src/cli.ts](/Users/vancityayush/Development/ssh_script/src/cli.ts).
