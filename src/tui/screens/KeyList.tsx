@@ -1,149 +1,120 @@
-import React, { useEffect, useState } from "react";
-import { Box, Dialog, ListItem, Spinner, Text, useInput } from "@vancityayush/tui";
-import { copy } from "../../commands/copy";
-import { list, type ManagedKey } from "../../commands/list";
-import { remove } from "../../commands/remove";
-import { PROVIDERS } from "../../providers";
-import { Header } from "../components/Header";
+import React, { useState, useEffect } from "react"
+import { Box, Text, Dialog, ListItem, useInput, Spinner } from "@vancityayush/tui"
+import { Header } from "../components/Header.js"
+import { list, type ManagedKey } from "../../commands/list.js"
+import { remove } from "../../commands/remove.js"
+import { copy } from "../../commands/copy.js"
+import { PROVIDERS } from "../../providers.js"
 
 type Props = {
-  onBack: () => void;
-};
+  onBack: () => void
+}
 
 export function KeyList({ onBack }: Props): React.ReactNode {
-  const [keys, setKeys] = useState<ManagedKey[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
-
-  async function refresh(): Promise<void> {
-    try {
-      const nextKeys = await list();
-      setKeys(nextKeys);
-      setSelectedIndex(currentIndex => (nextKeys.length === 0 ? 0 : Math.min(currentIndex, nextKeys.length - 1)));
-    } finally {
-      setLoading(false);
-    }
-  }
+  const [keys, setKeys] = useState<ManagedKey[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const [confirmRemove, setConfirmRemove] = useState<string | null>(null)
+  const [status, setStatus] = useState<string | null>(null)
+  const [dialogActive, setDialogActive] = useState(false)
 
   useEffect(() => {
-    void refresh();
-  }, []);
+    list().then(k => {
+      setKeys(k)
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [])
 
-  useInput((input, key) => {
-    if (loading) {
-      return;
+  useInput((_input, key) => {
+    if (key.escape) { onBack(); return }
+    if (key.upArrow) setSelectedIndex(i => Math.max(0, i - 1))
+    if (key.downArrow) setSelectedIndex(i => Math.min(keys.length - 1, i + 1))
+    if (key.return && keys[selectedIndex]) {
+      void handleCopy(keys[selectedIndex]!.name)
     }
-
-    if (confirmRemove) {
-      if (key.escape) {
-        setConfirmRemove(null);
-      } else if (key.return) {
-        void handleRemove(confirmRemove);
+    if (key.delete || (_input === "d" && !key.ctrl)) {
+      if (keys[selectedIndex]) {
+        setConfirmRemove(keys[selectedIndex]!.name)
+        setDialogActive(true)
       }
-      return;
     }
+  }, { isActive: !dialogActive && !loading })
 
-    if (key.escape) {
-      onBack();
-      return;
-    }
-
-    if (keys.length === 0) {
-      return;
-    }
-
-    if (key.upArrow) {
-      setSelectedIndex(index => Math.max(0, index - 1));
-      return;
-    }
-
-    if (key.downArrow) {
-      setSelectedIndex(index => Math.min(keys.length - 1, index + 1));
-      return;
-    }
-
-    const currentKey = keys[selectedIndex];
-    if (!currentKey) {
-      return;
-    }
-
-    if (key.return) {
-      void handleCopy(currentKey.name);
-      return;
-    }
-
-    if (input === "d") {
-      setConfirmRemove(currentKey.name);
-    }
-  });
+  useInput((_input, key) => {
+    if (key.escape) { setConfirmRemove(null); setDialogActive(false) }
+    if (key.return && confirmRemove) { void handleRemove(confirmRemove) }
+  }, { isActive: dialogActive })
 
   async function handleCopy(name: string): Promise<void> {
     try {
-      const result = await copy(name);
-      setStatus(result.copied ? `Copied ${name} to clipboard.` : result.publicKey);
-    } catch (copyError) {
-      setStatus(copyError instanceof Error ? copyError.message : String(copyError));
+      const r = await copy(name)
+      setStatus(r.copied ? `Copied ${name} public key to clipboard` : `Could not copy — key: ${r.publicKey.slice(0, 40)}…`)
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : String(err))
     }
   }
 
   async function handleRemove(name: string): Promise<void> {
-    setConfirmRemove(null);
+    setConfirmRemove(null)
+    setDialogActive(false)
     try {
-      await remove(name);
-      setStatus(`Removed ${name}.`);
-      await refresh();
-    } catch (removeError) {
-      setStatus(removeError instanceof Error ? removeError.message : String(removeError));
+      await remove(name)
+      const updated = await list()
+      setKeys(updated)
+      setSelectedIndex(i => Math.min(i, Math.max(0, updated.length - 1)))
+      setStatus(`Removed ${name}`)
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : String(err))
     }
   }
 
   if (loading) {
     return (
       <Box flexDirection="column">
-        <Header subtitle="Managed keys" />
-        <Spinner label="Loading managed SSH keys..." />
+        <Header subtitle="Managed SSH keys" />
+        <Spinner label="Loading keys…" />
       </Box>
-    );
+    )
   }
 
   return (
     <Box flexDirection="column">
-      <Header subtitle={`${keys.length} managed key${keys.length === 1 ? "" : "s"}`} />
+      <Header subtitle={`${keys.length} managed key${keys.length !== 1 ? "s" : ""}`} />
 
-      {keys.length === 0 ? <Text dimColor>No managed keys found. Run setup first.</Text> : null}
+      {keys.length === 0 && (
+        <Text dimColor>No managed keys found. Run setup to create one.</Text>
+      )}
 
-      {keys.map((key, index) => (
+      {keys.map((k, i) => (
         <ListItem
-          key={`${key.host}-${key.name}`}
-          isFocused={index === selectedIndex}
-          isSelected={index === selectedIndex}
-          description={`${key.host} · ${key.provider ? PROVIDERS[key.provider].label : "Unknown provider"}`}
+          key={k.name}
+          isFocused={i === selectedIndex}
+          isSelected={i === selectedIndex}
+          description={`${k.host} · ${k.provider ? PROVIDERS[k.provider].label : "unknown provider"}`}
         >
-          {key.name}
+          {k.name}
         </ListItem>
       ))}
 
-      {status ? (
+      {status && (
         <Box marginTop={1}>
           <Text dimColor>{status}</Text>
         </Box>
-      ) : null}
+      )}
 
       <Box marginTop={1}>
-        <Text dimColor>↑↓ navigate · Enter copy · d remove · Esc back</Text>
+        <Text dimColor>↑↓ navigate · Enter copy pubkey · d remove · Esc back</Text>
       </Box>
 
-      {confirmRemove ? (
+      {confirmRemove && (
         <Dialog
           title={`Remove "${confirmRemove}"?`}
-          subtitle="This deletes the key files, managed SSH config block, and per-key git include."
-          onCancel={() => setConfirmRemove(null)}
+          subtitle="This will delete the key files and SSH config entry."
+          onCancel={() => { setConfirmRemove(null); setDialogActive(false) }}
         >
           <Text>Press Enter to confirm or Esc to cancel.</Text>
         </Dialog>
-      ) : null}
+      )}
     </Box>
-  );
+  )
 }

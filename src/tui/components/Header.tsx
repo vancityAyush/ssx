@@ -1,18 +1,19 @@
-import React from "react";
-import { Box, Text } from "@vancityayush/tui";
+import React from "react"
+import { Box, Text } from "@vancityayush/tui"
 
 type Props = {
-  subtitle?: string;
-};
+  subtitle?: string
+}
 
 export function Header({ subtitle }: Props): React.ReactNode {
   return (
     <Box flexDirection="column" marginBottom={1}>
-      <Text bold color="claude">
-        sshx
+      <Text bold color="cyan">
+        sshx — SSH Key Manager
       </Text>
-      <Text dimColor>Keyboard-first SSH key setup for Git providers.</Text>
-      {subtitle ? <Text dimColor>{subtitle}</Text> : null}
+      {subtitle && (
+        <Text dimColor>{subtitle}</Text>
+      )}
     </Box>
-  );
+  )
 }

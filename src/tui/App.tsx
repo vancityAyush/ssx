@@ -1,32 +1,38 @@
-import React, { useState } from "react";
-import { Box, useApp, useInput } from "@vancityayush/tui";
-import { MainMenu, type MainMenuAction } from "./screens/MainMenu";
-import { Agent } from "./screens/Agent";
-import { KeyList } from "./screens/KeyList";
-import { Setup } from "./screens/Setup";
-import { TestConnection } from "./screens/TestConnection";
-
-type Screen = "main-menu" | MainMenuAction;
+import React, { useState } from "react"
+import { useApp, useInput } from "@vancityayush/tui"
+import { MainMenu, type MainMenuAction } from "./screens/MainMenu.js"
+import { Setup } from "./screens/Setup.js"
+import { KeyList } from "./screens/KeyList.js"
+import { TestConnection } from "./screens/TestConnection.js"
+import { Agent } from "./screens/Agent.js"
+import { screenForMenuAction, type AppScreen } from "./navigation.js"
 
 export function App(): React.ReactNode {
-  const { exit } = useApp();
-  const [screen, setScreen] = useState<Screen>("main-menu");
+  const { exit } = useApp()
+  const [screen, setScreen] = useState<AppScreen>("main-menu")
 
   useInput((input, key) => {
-    if (screen === "main-menu" && ((key.ctrl && input === "c") || input === "q")) {
-      exit();
+    if (screen !== "main-menu") return
+    if (input === "q" || key.escape) {
+      exit()
     }
-  });
+  })
 
-  const goBack = () => setScreen("main-menu");
+  const handleSelect = (action: MainMenuAction) => {
+    setScreen(screenForMenuAction(action))
+  }
 
-  return (
-    <Box flexDirection="column" paddingX={1} paddingY={1}>
-      {screen === "main-menu" ? <MainMenu onSelect={action => setScreen(action)} /> : null}
-      {screen === "setup" ? <Setup onBack={goBack} /> : null}
-      {screen === "key-list" ? <KeyList onBack={goBack} /> : null}
-      {screen === "test-connection" ? <TestConnection onBack={goBack} /> : null}
-      {screen === "agent" ? <Agent onBack={goBack} /> : null}
-    </Box>
-  );
+  switch (screen) {
+    case "setup":
+      return <Setup onBack={() => setScreen("main-menu")} />
+    case "key-list":
+      return <KeyList onBack={() => setScreen("main-menu")} />
+    case "test-connection":
+      return <TestConnection onBack={() => setScreen("main-menu")} />
+    case "agent":
+      return <Agent onBack={() => setScreen("main-menu")} />
+    case "main-menu":
+    default:
+      return <MainMenu onSelect={handleSelect} />
+  }
 }

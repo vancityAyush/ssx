@@ -1,24 +1,29 @@
-import { type ProviderKey, detectProviderFromHostname } from "../providers";
-import { expandHomePath, listManagedHostBlocks } from "../ssh/config";
+import { type ProviderKey } from "../providers.js"
+import {
+  listManagedHostBlocks,
+  expandHomePath,
+} from "../ssh/config.js"
+import { detectProviderFromHostname } from "../providers.js"
 
 export type ManagedKey = {
-  name: string;
-  host: string;
-  provider?: ProviderKey;
-  publicKeyPath: string;
-};
+  name: string
+  host: string
+  provider?: ProviderKey
+  publicKeyPath: string
+}
 
 export async function list(): Promise<ManagedKey[]> {
-  return listManagedHostBlocks().map(block => {
-    const rawIdentityPath = block.identityFiles[0] ?? "";
-    const name = rawIdentityPath.replace(/^.*[\\/]/, "");
-    const publicKeyPath = `${expandHomePath(rawIdentityPath)}.pub`;
-
+  const blocks = listManagedHostBlocks()
+  return blocks.map(block => {
+    const raw = block.identityFiles[0] ?? ""
+    const keyName = raw.replace(/^.*[\\/]/, "")
+    const expanded = expandHomePath(raw)
+    const publicKeyPath = `${expanded}.pub`
     return {
-      name,
+      name: keyName,
       host: block.host,
       provider: detectProviderFromHostname(block.hostname),
       publicKeyPath,
-    };
-  });
+    }
+  })
 }

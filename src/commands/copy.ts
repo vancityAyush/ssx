@@ -1,10 +1,8 @@
-import { copyToClipboard } from "../platform";
-import { readPublicKey } from "../ssh/keygen";
+import { readPublicKey } from "../ssh/keygen.js"
+import { copyToClipboard } from "../platform.js"
 
 export async function copy(keyName: string): Promise<{ publicKey: string; copied: boolean }> {
-  const publicKey = readPublicKey(keyName);
-  return {
-    publicKey,
-    copied: copyToClipboard(publicKey),
-  };
+  const publicKey = readPublicKey(keyName)
+  const copied = copyToClipboard(publicKey)
+  return { publicKey, copied }
 }

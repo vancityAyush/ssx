@@ -1,116 +1,95 @@
-import React, { useEffect, useState } from "react";
-import { Box, CustomSelect, ListItem, Spinner, Text, useInput } from "@vancityayush/tui";
-import { agentAdd, agentList, agentRemove, type AgentKey } from "../../commands/agent";
-import { list } from "../../commands/list";
-import { Header } from "../components/Header";
+import React, { useEffect, useState } from "react"
+import { basename } from "node:path"
+import { Box, CustomSelect, ListItem, Spinner, Text, useInput, type SelectProps } from "@vancityayush/tui"
+import { Header } from "../components/Header.js"
+import { agentAdd, agentList, agentRemove, type AgentKey } from "../../commands/agent.js"
+import { list, type ManagedKey } from "../../commands/list.js"
 
 type Props = {
-  onBack: () => void;
-};
+  onBack: () => void
+}
 
-type View = "list" | "add";
+type Mode = "list" | "add"
 
 export function Agent({ onBack }: Props): React.ReactNode {
-  const [view, setView] = useState<View>("list");
-  const [agentKeys, setAgentKeys] = useState<AgentKey[]>([]);
-  const [managedKeys, setManagedKeys] = useState<Array<{ label: string; value: string; description: string }>>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [status, setStatus] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  async function refresh(): Promise<void> {
-    try {
-      const [nextAgentKeys, nextManagedKeys] = await Promise.all([
-        agentList(),
-        list(),
-      ]);
-
-      setAgentKeys(nextAgentKeys);
-      setManagedKeys(
-        nextManagedKeys.map(key => ({
-          label: key.name,
-          value: key.name,
-          description: key.host,
-        })),
-      );
-      setSelectedIndex(index => (nextAgentKeys.length === 0 ? 0 : Math.min(index, nextAgentKeys.length - 1)));
-      setError(null);
-    } catch (refreshError) {
-      setError(refreshError instanceof Error ? refreshError.message : String(refreshError));
-    } finally {
-      setLoading(false);
-    }
-  }
+  const [mode, setMode] = useState<Mode>("list")
+  const [keys, setKeys] = useState<AgentKey[]>([])
+  const [managedKeys, setManagedKeys] = useState<ManagedKey[]>([])
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [status, setStatus] = useState<string | null>(null)
 
   useEffect(() => {
-    void refresh();
-  }, []);
+    void refresh()
+  }, [])
 
   useInput((input, key) => {
-    if (loading) {
-      return;
-    }
-
     if (key.escape) {
-      if (view === "add") {
-        setView("list");
-      } else {
-        onBack();
+      if (mode === "add") {
+        setMode("list")
+        return
       }
-      return;
+      onBack()
+      return
     }
 
-    if (view !== "list" || agentKeys.length === 0) {
-      if (view === "list" && input === "a") {
-        setView("add");
-      }
-      return;
+    if (loading) return
+
+    if (mode === "add") {
+      return
     }
 
     if (key.upArrow) {
-      setSelectedIndex(index => Math.max(0, index - 1));
-      return;
+      setSelectedIndex((current) => Math.max(0, current - 1))
     }
-
     if (key.downArrow) {
-      setSelectedIndex(index => Math.min(agentKeys.length - 1, index + 1));
-      return;
+      setSelectedIndex((current) => Math.min(keys.length - 1, current + 1))
     }
-
     if (input === "a") {
-      setView("add");
-      return;
+      setMode("add")
     }
-
-    if (input === "d") {
-      const currentKey = agentKeys[selectedIndex];
-      if (currentKey) {
-        void handleRemove(currentKey.path);
-      }
+    if (input === "r") {
+      void refresh()
     }
-  });
+    if ((input === "d" || key.delete) && keys[selectedIndex]) {
+      void removeSelected(keys[selectedIndex])
+    }
+  })
 
-  async function handleAdd(keyName: string): Promise<void> {
-    setView("list");
+  async function refresh(): Promise<void> {
+    setLoading(true)
     try {
-      await agentAdd(keyName);
-      setStatus(`Added ${keyName} to ssh-agent.`);
-      await refresh();
-    } catch (addError) {
-      setError(addError instanceof Error ? addError.message : String(addError));
+      const [agentKeys, availableManagedKeys] = await Promise.all([agentList(), list()])
+      setKeys(agentKeys)
+      setManagedKeys(availableManagedKeys)
+      setSelectedIndex((current) => Math.min(current, Math.max(0, agentKeys.length - 1)))
+      setStatus(null)
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : String(err))
+    } finally {
+      setLoading(false)
     }
   }
 
-  async function handleRemove(keyPath: string): Promise<void> {
-    const keyName = keyPath.split(/[\\/]/).pop() ?? keyPath;
-
+  async function addManagedKey(keyName: string): Promise<void> {
     try {
-      await agentRemove(keyName);
-      setStatus(`Removed ${keyName} from ssh-agent.`);
-      await refresh();
-    } catch (removeError) {
-      setError(removeError instanceof Error ? removeError.message : String(removeError));
+      await agentAdd(keyName)
+      setStatus(`Added ${keyName} to ssh-agent`)
+      setMode("list")
+      await refresh()
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : String(err))
+      setMode("list")
+    }
+  }
+
+  async function removeSelected(key: AgentKey): Promise<void> {
+    try {
+      await agentRemove(basename(key.path))
+      setStatus(`Removed ${basename(key.path)} from ssh-agent`)
+      await refresh()
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : String(err))
     }
   }
 
@@ -118,65 +97,69 @@ export function Agent({ onBack }: Props): React.ReactNode {
     return (
       <Box flexDirection="column">
         <Header subtitle="SSH agent" />
-        <Spinner label="Loading agent state..." />
+        <Spinner label="Loading ssh-agent keys…" />
       </Box>
-    );
+    )
   }
 
-  if (view === "add") {
+  if (mode === "add") {
+    const options = managedKeys.map((key) => ({
+      label: key.name,
+      value: key.name,
+      description: key.host,
+    }))
+
     return (
       <Box flexDirection="column">
-        <Header subtitle="Add a managed key to ssh-agent" />
-        {managedKeys.length === 0 ? (
-          <Text dimColor>No managed keys found. Run setup first.</Text>
-        ) : (
+        <Header subtitle="Add managed key to ssh-agent" />
+        {options.length > 0 ? (
           <CustomSelect
-            options={managedKeys}
-            onCancel={() => setView("list")}
-            onChange={(value: string) => {
-              void handleAdd(value);
-            }}
-            visibleOptionCount={Math.min(6, Math.max(1, managedKeys.length))}
+            {...({
+              options,
+              onChange: (value: string) => {
+                void addManagedKey(value)
+              },
+              visibleOptionCount: Math.min(6, Math.max(1, options.length)),
+            } satisfies SelectProps<string>)}
           />
+        ) : (
+          <Text dimColor>No managed sshx keys available. Run setup first.</Text>
         )}
         <Box marginTop={1}>
           <Text dimColor>Esc back</Text>
         </Box>
       </Box>
-    );
+    )
   }
 
   return (
     <Box flexDirection="column">
-      <Header subtitle={`${agentKeys.length} key${agentKeys.length === 1 ? "" : "s"} loaded in ssh-agent`} />
+      <Header subtitle={`${keys.length} key${keys.length !== 1 ? "s" : ""} in ssh-agent`} />
 
-      {agentKeys.length === 0 ? <Text dimColor>No keys are currently loaded. Press a to add one.</Text> : null}
+      {keys.length === 0 && (
+        <Text dimColor>No keys currently loaded in ssh-agent.</Text>
+      )}
 
-      {agentKeys.map((key, index) => (
+      {keys.map((key, index) => (
         <ListItem
           key={`${key.fingerprint}-${key.path}`}
           isFocused={index === selectedIndex}
           isSelected={index === selectedIndex}
-          description={key.type}
+          description={`${key.type} · ${key.fingerprint}`}
         >
-          {key.path.split(/[\\/]/).pop() ?? key.path}
+          {key.path}
         </ListItem>
       ))}
 
-      {status ? (
+      {status && (
         <Box marginTop={1}>
           <Text dimColor>{status}</Text>
         </Box>
-      ) : null}
-      {error ? (
-        <Box marginTop={1}>
-          <Text color="red">{error}</Text>
-        </Box>
-      ) : null}
+      )}
 
       <Box marginTop={1}>
-        <Text dimColor>↑↓ navigate · a add key · d remove key · Esc back</Text>
+        <Text dimColor>a add managed key · d remove selected key · r refresh · Esc back</Text>
       </Box>
     </Box>
-  );
+  )
 }

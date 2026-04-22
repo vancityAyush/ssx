@@ -2,7 +2,9 @@
 
 `sshx` is a TUI-first Bun CLI for managing SSH keys for GitHub, GitLab, Bitbucket, and Azure DevOps. It runs as a full-screen interactive terminal app when invoked with no arguments, and it also supports headless commands for scripting and CI.
 
-## What It Does
+Current TUI rebuild uses `@vancityayush/tui`, so Bun is required at runtime.
+
+## Features
 
 - Launches a keyboard-first setup wizard for SSH keys
 - Generates Ed25519 keys for GitHub, GitLab, and Bitbucket
@@ -47,7 +49,7 @@ git clone https://github.com/vancityAyush/sshx.git
 cd sshx
 bun install
 bun run build
-bun dist/cli.js --help
+bun dist/cli.js
 ```
 
 ## Usage
@@ -63,10 +65,16 @@ sshx --tui
 
 ```bash
 sshx setup github -e you@example.com -k personal
+
+# Test a provider
+sshx test github
+
+# Show configured SSH hosts
 sshx list
 sshx copy personal
 sshx remove personal
-sshx test github
+
+# Manage the SSH agent
 sshx agent list
 sshx agent add personal
 sshx agent remove personal
@@ -88,15 +96,8 @@ sshx agent remove personal
 
 `sshx` only treats SSH config entries as its own when they are marked with `# sshx`. Generated blocks look like this:
 
-```sshconfig
-# sshx
-Host github.com
-  HostName github.com
-  User git
-  AddKeysToAgent yes
-  IdentityFile ~/.ssh/id_ed25519_github
-  IdentitiesOnly yes
-```
+- `./scripts/ssh.sh`
+- `pwsh ./scripts/ssh.ps1`
 
 Removal and listing operations only target these managed entries.
 
