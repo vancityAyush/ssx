@@ -1,0 +1,17 @@
+use https://github.com/vancityAyush/tui and create this project from scracts, discard all code in this repo, but miantain the project goal for managining user's ssh on local system for seeting up for various git providers like github, azure devops, bitbucket etc,
+
+---
+
+continue
+
+---
+
+use ask userQuestionTool
+
+---
+
+ask me questions again
+
+---
+
+use askUserUestions tool ALWAYS
