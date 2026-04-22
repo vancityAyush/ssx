@@ -1,0 +1,50 @@
+{
+  "cli_version": "0.5.5",
+  "checkpoint_id": "6fbde99c49bd",
+  "session_id": "019db54b-6fd3-7fb0-9287-2866e1220d12",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-22T15:00:30.053608Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [],
+  "agent": "Codex",
+  "model": "gpt-5.4",
+  "turn_id": "2d9ee89a2159",
+  "checkpoint_transcript_start": 585,
+  "transcript_lines_at_start": 585,
+  "token_usage": {
+    "input_tokens": 1303913,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 1301760,
+    "output_tokens": 2277,
+    "api_call_count": 8
+  },
+  "session_metrics": {
+    "turn_count": 4
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 483,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".codex/agents/entire-search.toml": 23,
+        ".codex/config.toml": 3,
+        ".codex/hooks.json": 40,
+        ".gemini/settings.json": 5,
+        ".github/hooks/entire.json": 3,
+        "AGENTS.md": 46,
+        "skills/opensrc/SKILL.md": 89,
+        "skills/opensrc/agents/openai.yaml": 7,
+        "skills/sshx-manual-qa/SKILL.md": 85,
+        "skills/sshx-manual-qa/agents/openai.yaml": 4,
+        "skills/sshx-release-notes/SKILL.md": 85,
+        "skills/sshx-release-notes/agents/openai.yaml": 4,
+        "skills/sshx-troubleshoot/SKILL.md": 85,
+        "skills/sshx-troubleshoot/agents/openai.yaml": 4
+      }
+    }
+  ]
+}

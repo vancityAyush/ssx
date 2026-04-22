@@ -1,0 +1,21 @@
+How can I use this sshx tool?
+
+---
+
+I want to use tui rebuild version of sshx, and also push it to main branch and publish a release throuoh ci/cd pipleine
+
+---
+
+full rebuild
+
+---
+
+yes
+
+---
+
+yes  current dirty working tree as the baseline and continue the full rebuild from those in-progress changes
+
+---
+
+continue
