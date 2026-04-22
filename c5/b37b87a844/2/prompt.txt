@@ -1,0 +1,37 @@
+setup # ${UserConfigDir}/zsh/.zshrc
+autoload -U compinit && compinit
+export CARAPACE_BRIDGES='zsh,fish,bash,inshellisense' # optional
+zstyle ':completion:*' format $'\e[2;37mCompleting %d\e[m'
+source <(carapace _carapace)
+
+
+i insteall caraspace using homebrew logs::
+
+^C
+❯ brew install carapace
+
+==> Auto-updating Homebrew...
+Adjust how often this is run with `$HOMEBREW_AUTO_UPDATE_SECS` or disable with
+`$HOMEBREW_NO_AUTO_UPDATE=1`. Hide these hints with `$HOMEBREW_NO_ENV_HINTS=1` (see `man brew`).
+==> Auto-updated Homebrew!
+Updated 2 taps (steipete/tap and entireio/tap).
+==> Deleted Installed Formulae
+steipete/tap/summarize ✘
+
+You have 10 outdated formulae and 4 outdated casks installed.
+
+==> Fetching downloads for: carapace
+✔︎ Bottle Manifest carapace (1.6.4)                                                                                     Downloaded    7.4KB/  7.4KB
+✔︎ Bottle carapace (1.6.4)                                                                                              Downloaded   12.5MB/ 12.5MB
+==> Pouring carapace--1.6.4.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/carapace/1.6.4: 9 files, 60.0MB
+==> Running `brew cleanup carapace`...
+Disable this behaviour by setting `HOMEBREW_NO_INSTALL_CLEANUP=1`.
+Hide these hints with `HOMEBREW_NO_ENV_HINTS=1` (see `man brew`).
+==> Caveats
+zsh completions have been installed to:
+  /opt/homebrew/share/zsh/site-functions
+
+---
+
+setup carspace completions got commands like git, claude, codex, bun, npm, nvm, brew etc
