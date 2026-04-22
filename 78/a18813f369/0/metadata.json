@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.5.5",
+  "checkpoint_id": "78a18813f369",
+  "session_id": "019db54b-6fd3-7fb0-9287-2866e1220d12",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-22T20:20:35.54511Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "docs/superpowers/specs/2026-04-23-npm-publish-design.md"
+  ],
+  "agent": "Codex",
+  "model": "gpt-5.4",
+  "turn_id": "2d9ee89a2159",
+  "checkpoint_transcript_start": 646,
+  "transcript_lines_at_start": 646,
+  "session_metrics": {
+    "turn_count": 4
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-22T20:20:35.518211Z",
+    "agent_lines": 46,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 46,
+    "total_lines_changed": 46,
+    "agent_percentage": 100,
+    "metric_version": 2
+  }
+}

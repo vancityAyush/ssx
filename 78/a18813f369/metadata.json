@@ -1,0 +1,18 @@
+{
+  "cli_version": "0.5.5",
+  "checkpoint_id": "78a18813f369",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "docs/superpowers/specs/2026-04-23-npm-publish-design.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/78/a18813f369/0/metadata.json",
+      "transcript": "/78/a18813f369/0/full.jsonl",
+      "content_hash": "/78/a18813f369/0/content_hash.txt",
+      "prompt": ""
+    }
+  ]
+}
