@@ -1,6 +1,6 @@
 {
   "name": "@vancityayush/sshx",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Cross-platform SSH key manager for Git providers, implemented in TypeScript",
   "license": "MIT",
   "repository": {
@@ -17,30 +17,29 @@
   },
   "scripts": {
     "build": "bun build ./src/cli.ts --target=node --format=cjs --outfile ./dist/cli.js",
-    "typecheck": "bunx tsc --noEmit --project tsconfig.json"
+    "typecheck": "bunx tsc --noEmit --project tsconfig.json",
+    "test": "bun test"
   },
   "files": [
     "bin/",
     "dist/",
     "README.md",
-    "ssh.sh",
-    "ssh.ps1"
+    "scripts/ssh.sh",
+    "scripts/ssh.ps1"
   ],
   "engines": {
     "node": ">=18"
   },
   "keywords": [
-    "ssh",
-    "git",
-    "github",
-    "gitlab",
-    "bitbucket",
-    "azure-devops",
-    "cli",
-    "typescript"
+    "ssh", "git", "github", "gitlab", "bitbucket", "azure-devops", "cli", "typescript"
   ],
+  "dependencies": {
+    "@vancityayush/tui": "*",
+    "react": "^18"
+  },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "@types/react": "^18",
     "typescript": "^5.9.3"
   }
 }
