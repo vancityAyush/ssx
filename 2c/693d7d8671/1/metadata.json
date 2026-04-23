@@ -1,0 +1,36 @@
+{
+  "cli_version": "0.5.5",
+  "checkpoint_id": "2c693d7d8671",
+  "session_id": "e21ae0ed-ad54-4670-bf34-8f925b9e926e",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-23T03:46:14.106329Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "docs/superpowers/plans/2026-04-23-npm-publish.md"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-sonnet-4-6",
+  "turn_id": "7ddc119713a7",
+  "checkpoint_transcript_start": 94,
+  "transcript_lines_at_start": 94,
+  "token_usage": {
+    "input_tokens": 8,
+    "cache_creation_tokens": 27184,
+    "cache_read_tokens": 219663,
+    "output_tokens": 2470,
+    "api_call_count": 7
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-23T03:46:14.100721Z",
+    "agent_lines": 152,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 152,
+    "total_lines_changed": 152,
+    "agent_percentage": 100,
+    "metric_version": 2
+  }
+}
