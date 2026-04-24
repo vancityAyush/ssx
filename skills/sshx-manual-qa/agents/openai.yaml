@@ -1,0 +1,4 @@
+interface:
+  display_name: "SSHX Manual QA"
+  short_description: "Run focused manual validation for sshx"
+  default_prompt: "Use $sshx-manual-qa to design or execute manual validation for sshx."

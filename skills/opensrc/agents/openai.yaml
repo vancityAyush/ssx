@@ -1,0 +1,7 @@
+interface:
+  display_name: "OpenSrc"
+  short_description: "Fetch upstream source for dependency analysis"
+  default_prompt: "Use $opensrc to fetch and inspect the upstream source code relevant to this task."
+
+policy:
+  allow_implicit_invocation: true

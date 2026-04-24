@@ -1,0 +1,4 @@
+interface:
+  display_name: "SSHX Release Notes"
+  short_description: "Draft changelog and release note summaries"
+  default_prompt: "Use $sshx-release-notes to prepare changelog and release note text for sshx changes."

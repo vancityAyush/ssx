@@ -1,0 +1,4 @@
+interface:
+  display_name: "SSHX Troubleshooter"
+  short_description: "Diagnose sshx and SSH setup failures"
+  default_prompt: "Use $sshx-troubleshoot to diagnose an sshx setup or SSH authentication failure."
